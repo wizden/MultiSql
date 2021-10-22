@@ -316,7 +316,9 @@ namespace MultiSql.UserControls.ViewModels
 
                                                                                  if (databasesNotFound.Count > 0)
                                                                                  {
-                                                                                     ErrorText = "Unable to match databases from list: " + String.Join(", ", databasesNotFound);
+                                                                                     ErrorText = "Unable to match databases from list: " +
+                                                                                                 String.Join(", ", databasesNotFound)    +
+                                                                                                 ".";
                                                                                  }
                                                                              }
                                                                              catch (IOException iex)
