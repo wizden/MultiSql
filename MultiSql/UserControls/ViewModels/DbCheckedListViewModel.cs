@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
 using System.Xml;
 using System.Xml.Schema;
+using Microsoft.Win32;
 using MultiSql.Common;
 
 namespace MultiSql.UserControls.ViewModels
@@ -22,6 +27,16 @@ namespace MultiSql.UserControls.ViewModels
         ///     Private store for the command to change the server connection.
         /// </summary>
         private RelayCommand _cmdChangeConnection;
+
+        /// <summary>
+        ///     Private store for the command to load the database list.
+        /// </summary>
+        private RelayCommand _cmdLoadList;
+
+        /// <summary>
+        ///     Private store for the command to save the database list.
+        /// </summary>
+        private RelayCommand _cmdSaveList;
 
         /// <summary>
         ///     Private store for the database filter text.
@@ -55,10 +70,7 @@ namespace MultiSql.UserControls.ViewModels
         /// <summary>
         ///     Initialises a new instance of the <see cref="DbCheckedListViewModel" /> class.
         /// </summary>
-        public DbCheckedListViewModel()
-        {
-            ChangeConnection();
-        }
+        public DbCheckedListViewModel() { }
 
         #endregion Public Constructors
 
@@ -77,6 +89,7 @@ namespace MultiSql.UserControls.ViewModels
                 allDatabases.CollectionChanged += AllDatabasesCollectionChanged;
                 RaisePropertyChanged();
                 RaisePropertyChanged("GetDatabasesSelectedCountText");
+                RaisePropertyChanged("ConnectionExists");
             }
         }
 
@@ -87,6 +100,24 @@ namespace MultiSql.UserControls.ViewModels
         {
             get { return _cmdChangeConnection ??= new RelayCommand(execute => ChangeConnection(), canExecute => !isQueryRunning); }
         }
+
+        /// <summary>
+        ///     Command to load the list of databases for selection.
+        /// </summary>
+        public RelayCommand CmdLoadList
+        {
+            get { return _cmdLoadList ??= new RelayCommand(async execute => await LoadList(), canExecute => AllDatabases?.Count > 0); }
+        }
+
+        /// <summary>
+        ///     Command to save the list of databases for future selection.
+        /// </summary>
+        public RelayCommand CmdSaveList
+        {
+            get { return _cmdSaveList ??= new RelayCommand(async execute => await SaveList(), canExecute => AllDatabases?.Any(db => db.QueryExecutionRequested) ?? false); }
+        }
+
+        public Boolean ConnectionExists => AllDatabases?.Count > 0;
 
         /// <summary>
         ///     Gets the connection string builder for the server connection.
@@ -104,6 +135,20 @@ namespace MultiSql.UserControls.ViewModels
             {
                 _databaseFilterText                                                         = value;
                 ((CollectionView) CollectionViewSource.GetDefaultView(AllDatabases)).Filter = DatabaseFilter;
+            }
+        }
+
+        /// <summary>
+        ///     Gets or sets any error text associated with the control.
+        /// </summary>
+        public String ErrorText
+        {
+            get => errorText;
+
+            private set
+            {
+                errorText = value;
+                RaisePropertyChanged();
             }
         }
 
@@ -178,8 +223,10 @@ namespace MultiSql.UserControls.ViewModels
             {
                 if (cs.Databases.Count > 0)
                 {
+                    ErrorText = String.Empty;
                     var retVal = new ObservableCollection<DbInfo>();
                     ConnectionStringBuilder = new SqlConnectionStringBuilder(cs.ServerConnectionString);
+                    RaisePropertyChanged("ConnectionStringBuilder");
 
                     foreach (var database in cs.Databases)
                     {
@@ -235,6 +282,85 @@ namespace MultiSql.UserControls.ViewModels
             retVal.IgnoreComments   = ignoreComments;
             retVal.IgnoreWhitespace = ignoreWhiteSpace;
             return retVal;
+        }
+
+        private async Task LoadList()
+        {
+            var ofd = new OpenFileDialog {Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*", CheckPathExists = true, CheckFileExists = true, Multiselect = false};
+
+            await Task.Run(() =>
+                           {
+                               Application.Current.Dispatcher.Invoke(() =>
+                                                                     {
+                                                                         if (ofd.ShowDialog().Value)
+                                                                         {
+                                                                             ErrorText = String.Empty;
+
+                                                                             try
+                                                                             {
+                                                                                 var databasesNotFound = new List<String>();
+                                                                                 var databaseList      = File.ReadAllLines(ofd.FileName).Select(s => s.ToUpper());
+
+                                                                                 foreach (var databaseName in databaseList)
+                                                                                 {
+                                                                                     try
+                                                                                     {
+                                                                                         AllDatabases.First(db => db.Database.ToUpper() == databaseName).
+                                                                                                      QueryExecutionRequested = !SelectAllDatabases;
+                                                                                     }
+                                                                                     catch (InvalidOperationException ioe)
+                                                                                     {
+                                                                                         databasesNotFound.Add(databaseName);
+                                                                                     }
+                                                                                 }
+
+                                                                                 if (databasesNotFound.Count > 0)
+                                                                                 {
+                                                                                     ErrorText = "Unable to match databases from list: " +
+                                                                                                 String.Join(", ", databasesNotFound)    +
+                                                                                                 ".";
+                                                                                 }
+                                                                             }
+                                                                             catch (IOException iex)
+                                                                             {
+                                                                                 ErrorText = iex.Message;
+                                                                             }
+                                                                         }
+                                                                     });
+                           });
+
+
+        }
+
+        private async Task SaveList()
+        {
+            var sfd = new SaveFileDialog();
+            sfd.Filter          = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            sfd.CheckPathExists = true;
+            ErrorText           = String.Empty;
+
+            await Task.Run(() =>
+                           {
+                               Application.Current.Dispatcher.Invoke(() =>
+                                                                     {
+                                                                         if (sfd.ShowDialog().Value)
+                                                                         {
+                                                                             try
+                                                                             {
+                                                                                 var dbList = String.Join(Environment.NewLine,
+                                                                                                          AllDatabases.Where(db => db.QueryExecutionRequested).
+                                                                                                                       Select(db => db.Database));
+
+                                                                                 File.WriteAllText(sfd.FileName, dbList);
+                                                                             }
+                                                                             catch (IOException iex)
+                                                                             {
+                                                                                 ErrorText = iex.Message;
+                                                                             }
+                                                                         }
+                                                                     });
+                           });
+
         }
 
         #endregion Private Methods

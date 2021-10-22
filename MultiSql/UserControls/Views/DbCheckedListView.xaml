@@ -6,10 +6,11 @@
              xmlns:local="clr-namespace:MultiSql.UserControls.Views"
              xmlns:viewModels="clr-namespace:MultiSql.UserControls.ViewModels"
              xmlns:converters="clr-namespace:MultiSql.Converters"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
     </UserControl.Resources>
     <UserControl.DataContext>
         <viewModels:DbCheckedListViewModel />
@@ -21,7 +22,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
@@ -66,16 +66,43 @@
             </ListView.View>
         </ListView>
 
-        <WrapPanel Grid.Row="2">
-            <TextBlock Name="TxtBlkDatabases" Text="Select Databases" Width="100" />
-            <CheckBox Name="ChkDatabaseMasterSelect"  VerticalAlignment="Center" IsChecked="{Binding SelectAllDatabases}" />
-        </WrapPanel>
+        <Grid  Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <WrapPanel Grid.Row="0" Grid.Column="0">
+                <CheckBox Name="ChkDatabaseMasterSelect" Content="Select All" IsEnabled="{Binding ConnectionExists}" VerticalAlignment="Center" IsChecked="{Binding SelectAllDatabases}" />
+            </WrapPanel>
+            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Name="BtnLoadList" Content="Load" Width="Auto" 
+                        ToolTip="Set databases to checked based on file content. If 'Select All' is checked, databases are unchecked."
+                        Command="{Binding CmdLoadList}" />
+                <Button Name="BtnSaveList" Content="Save" Width="Auto" 
+                        ToolTip="Save checked databases to file."
+                        Command="{Binding CmdSaveList}" />
+            </StackPanel>
 
-        <WrapPanel Grid.Row="3">
-            <TextBlock Name="TxtBlkDatabasesSearch" Text="Search Databases" Width="100" />
-            <TextBox Name="TxtFilterDatabaseList" PreviewTextInput="TxtFilterDatabaseList_PreviewTextInput" MaxLength="5" Width="100" Text="{Binding DatabaseFilterText, UpdateSourceTrigger=PropertyChanged}"  />
-        </WrapPanel>
+            <TextBlock Grid.Row="1" Grid.Column="0" Name="TxtBlkDatabasesSearch" Text="Search Databases" />
+            <TextBox Grid.Row="1" Grid.Column="1" Name="TxtFilterDatabaseList" 
+                     PreviewTextInput="TxtFilterDatabaseList_PreviewTextInput" MaxLength="5" 
+                     Width="Auto" Text="{Binding DatabaseFilterText, UpdateSourceTrigger=PropertyChanged}"  />
 
-        
+            <Grid Grid.Row="2" Grid.ColumnSpan="2" Height="100" Visibility="{Binding ErrorText.Length, Converter={StaticResource CountToVisibilityConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" Name="TxtErrors" IsReadOnly="True" Foreground="Red" AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Height="Auto"
+                         Text="{Binding ErrorText, Mode=OneWay}"/>
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>
