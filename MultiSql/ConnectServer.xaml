@@ -27,8 +27,8 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Server" HorizontalAlignment="Right" />
-            <TextBox Grid.Row="0" Grid.Column="1" Name="TxtServerName" HorizontalAlignment="Stretch" 
-                     MaxLength="200" />
+            <ComboBox Grid.Row="0" Grid.Column="1" Name="CmbServerName" HorizontalAlignment="Stretch" 
+                     IsEditable="True" />
 
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Authentication" HorizontalAlignment="Right" />
             <ComboBox Grid.Row="1" Grid.Column="1" Name="CmbAuthenticationType" HorizontalAlignment="Stretch"
