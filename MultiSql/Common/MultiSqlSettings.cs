@@ -23,6 +23,11 @@ namespace MultiSql.Common
         /// </summary>
         private static String appBaseDirectory = String.Empty;
 
+        /// <summary>
+        ///     Private store for the path to the file containing the connection list.
+        /// </summary>
+        private static readonly String connectionsListFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Connections.xml");
+
         #endregion Private Fields
 
         #region Public Enums
@@ -101,6 +106,11 @@ namespace MultiSql.Common
                 return applicationName;
             }
         }
+
+        /// <summary>
+        ///     Gets the file path for the list of connections.
+        /// </summary>
+        public static String ConnectionsListFile => connectionsListFile;
 
         #endregion Public Properties
 
