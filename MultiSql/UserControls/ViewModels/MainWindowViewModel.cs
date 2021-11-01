@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using MultiSql.Common;
 
 namespace MultiSql.UserControls.ViewModels
@@ -36,11 +37,14 @@ namespace MultiSql.UserControls.ViewModels
         private void ConnectServerViewModel_ConnectionChanged(Object sender, EventArgs e)
         {
             var connectServer = sender as ConnectServerViewModel;
+            _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Clear();
+            _multiSqlViewModel.DatabaseListViewModel.ConnectionStringBuilder = new SqlConnectionStringBuilder(connectServer.ServerConnectionString);
 
             foreach (var database in connectServer.Databases)
             {
                 _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Add(new DbInfo(connectServer.ServerName, database));
             }
+
 
             SelectedViewModel                                     = _multiSqlViewModel;
         }

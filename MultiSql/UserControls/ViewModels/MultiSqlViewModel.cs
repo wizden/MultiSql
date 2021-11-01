@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -16,6 +17,7 @@ using System.Xml;
 using System.Xml.Schema;
 using MultiSql.Common;
 using NLog;
+using static MultiSql.Common.MultiSqlSettings;
 using MessageBox = System.Windows.MessageBox;
 using MessageBoxOptions = System.Windows.MessageBoxOptions;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
@@ -30,9 +32,13 @@ namespace MultiSql.UserControls.ViewModels
         public MultiSqlViewModel()
         {
 
-            DatabaseListViewModel = new DbCheckedListViewModel();
-            var test = "Test";
+            DatabaseListViewModel  =  new DbCheckedListViewModel();
+            executionTimer         =  new Timer(1000);
+            executionTimer.Elapsed += ExecutionTimer_Elapsed;
 
+            // TODO: Remove at commit
+            QueryAllText      = "select		*   from TestData";
+            ResultDisplayType = ResultDisplayType.Text;
         }
 
 
@@ -166,7 +172,7 @@ namespace MultiSql.UserControls.ViewModels
         /// <summary>
         ///     Private store for the list of queries to be executed.
         /// </summary>
-        private readonly List<String> queriesToExecute = new();
+        private List<String> queriesToExecute = new();
 
         /// <summary>
         ///     Date time object to determine query execution time.
@@ -187,11 +193,6 @@ namespace MultiSql.UserControls.ViewModels
         ///     The query to be executed by the request.
         /// </summary>
         private String queryToExecute = String.Empty;
-
-        /// <summary>
-        ///     Private store for the way the result is to be displayed.
-        /// </summary>
-        private readonly MultiSqlSettings.ResultDisplayType resultDisplayType = MultiSqlSettings.ResultDisplayType.DifferentTabs;
 
         /// <summary>
         ///     Private store for the content of the query execution results.
@@ -295,10 +296,10 @@ namespace MultiSql.UserControls.ViewModels
             {
                 var retVal = false;
 
-                retVal = resultDisplayType == MultiSqlSettings.ResultDisplayType.CombinedFile     ||
-                         resultDisplayType == MultiSqlSettings.ResultDisplayType.DatabaseFileName ||
-                         resultDisplayType == MultiSqlSettings.ResultDisplayType.Text             ||
-                         resultDisplayType == MultiSqlSettings.ResultDisplayType.TextFirstHeaderOnly;
+                retVal = ResultDisplayType == ResultDisplayType.CombinedFile     ||
+                         ResultDisplayType == ResultDisplayType.DatabaseFileName ||
+                         ResultDisplayType == ResultDisplayType.Text             ||
+                         ResultDisplayType == ResultDisplayType.TextFirstHeaderOnly;
 
                 return retVal;
             }
@@ -362,6 +363,10 @@ namespace MultiSql.UserControls.ViewModels
             {
                 queriesToExecute.Clear();
 
+                queriesToExecute = QueryAllText.Split(new[] {Environment.NewLine + Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries).
+                                                Where(str => str != Environment.NewLine).
+                                                ToList();
+
                 // TODO: Pending task of determining query.
                 ////if (String.IsNullOrEmpty(TxtQuery.SelectedText))
                 ////{
@@ -411,6 +416,21 @@ namespace MultiSql.UserControls.ViewModels
             {
                 _resultsText = value;
                 RaisePropertyChanged();
+            }
+        }
+
+        public IEnumerable<ResultDisplayType> ResultDisplayTypes => Enum.GetValues(typeof(ResultDisplayType)).Cast<ResultDisplayType>();
+
+        private ResultDisplayType _resultDisplayType;
+
+        public ResultDisplayType ResultDisplayType
+        {
+            get => _resultDisplayType;
+            set
+            {
+                _resultDisplayType = value;
+                RaisePropertyChanged();
+
             }
         }
 
@@ -554,6 +574,16 @@ namespace MultiSql.UserControls.ViewModels
         /// <returns>Boolean indicating whether a query can be saved.</returns>
         private Boolean CanSaveQuery(Object parameter) => !String.IsNullOrEmpty(QueryAllText) && !isQueryRunning;
 
+        /// <summary>
+        ///     Show execution time for query.
+        /// </summary>
+        /// <param name="sender">The sender object.</param>
+        /// <param name="e">The System.Timers.ElapsedEventArgs object.</param>
+        private void ExecutionTimer_Elapsed(Object sender, ElapsedEventArgs e)
+        {
+            QueryExecutionTimeText = DateTime.UtcNow.Subtract(queryExecutionStartDateTime).ToString(@"hh\:mm\:ss");
+        }
+
         // TODO: Pending Task
         /////// <summary>
         ///////     Determine the way the results are to be displayed.
@@ -620,15 +650,6 @@ namespace MultiSql.UserControls.ViewModels
         ////    }
         ////}
 
-        /////// <summary>
-        ///////     Show execution time for query.
-        /////// </summary>
-        /////// <param name="sender">The sender object.</param>
-        /////// <param name="e">The System.Timers.ElapsedEventArgs object.</param>
-        ////private void ExecutionTimer_Elapsed(Object sender, ElapsedEventArgs e)
-        ////{
-        ////    TxtBlkExecutionTime.Dispatcher.Invoke(() => { TxtBlkExecutionTime.Text = DateTime.UtcNow.Subtract(queryExecutionStartDateTime).ToString(@"hh\:mm\:ss"); });
-        ////}
 
         /////// <summary>
         ///////     Event handler on collapsing the database list expander.
@@ -707,9 +728,9 @@ namespace MultiSql.UserControls.ViewModels
         /// <param name="dataSet">The data set object whose tables are used to get the result.</param>
         /// <param name="resultDisplayType">The display type for the result.</param>
         /// <returns>The result in text format for the data table.</returns>
-        private List<Result> GetResultText(DataSet dataSet, MultiSqlSettings.ResultDisplayType resultDisplayType)
+        private List<Result> GetResultText(DataSet dataSet, ResultDisplayType resultDisplayType)
         {
-            var ssmsStyleFormatting = resultDisplayType == MultiSqlSettings.ResultDisplayType.TextSqlFormatted;
+            var ssmsStyleFormatting = resultDisplayType == ResultDisplayType.TextSqlFormatted;
             var delimiterCharacter  = "\t";
             var queryCounter        = 0;
             var totalRows           = 0;
@@ -987,7 +1008,7 @@ namespace MultiSql.UserControls.ViewModels
                 }
                 catch (IOException iex)
                 {
-                    MessageBox.Show(iex.Message, MultiSqlSettings.ApplicationName);
+                    MessageBox.Show(iex.Message, ApplicationName);
                 }
             }
         }
@@ -1248,7 +1269,7 @@ namespace MultiSql.UserControls.ViewModels
                 }
                 catch (IOException iex)
                 {
-                    MessageBox.Show(iex.Message, MultiSqlSettings.ApplicationName);
+                    MessageBox.Show(iex.Message, ApplicationName);
                     retVal = false;
                 }
             }
@@ -1264,7 +1285,7 @@ namespace MultiSql.UserControls.ViewModels
         /// <param name="dbInfo">The database object.</param>
         private async Task SendResultToCombinedFile(List<Result> results, DbInfo dbInfo = null)
         {
-            if (resultDisplayType == MultiSqlSettings.ResultDisplayType.CombinedFile)
+            if (ResultDisplayType == ResultDisplayType.CombinedFile)
             {
                 await Task.Run(() =>
                                {
@@ -1331,7 +1352,7 @@ namespace MultiSql.UserControls.ViewModels
         /// <param name="dbInfo">The database object.</param>
         private async Task SendResultToIndividualFile(List<Result> results, DbInfo dbInfo = null)
         {
-            if (resultDisplayType == MultiSqlSettings.ResultDisplayType.DatabaseFileName)
+            if (ResultDisplayType == ResultDisplayType.DatabaseFileName)
             {
                 await Task.Run(() =>
                                {
@@ -1521,30 +1542,30 @@ namespace MultiSql.UserControls.ViewModels
             SiteCounter++;
             Logger.Debug($"Setting result for {dbInfo.Server} / {dbInfo.Database}.");
 
-            if (resultDisplayType == MultiSqlSettings.ResultDisplayType.DifferentTabs)
+            if (ResultDisplayType == ResultDisplayType.DifferentTabs)
             {
                 // TODO: Pending Task.
                 ////await SendResultToTabs(dbInfo, dataSet);
             }
             else
             {
-                var results = GetResultText(dataSet, resultDisplayType);
+                var results = GetResultText(dataSet, ResultDisplayType);
 
                 if (results.Count > 0)
                 {
-                    if (resultDisplayType == MultiSqlSettings.ResultDisplayType.Text || resultDisplayType == MultiSqlSettings.ResultDisplayType.TextSqlFormatted)
+                    if (ResultDisplayType == ResultDisplayType.Text || ResultDisplayType == ResultDisplayType.TextSqlFormatted)
                     {
                         await SendResultToText(results, dbInfo);
                     }
-                    else if (resultDisplayType == MultiSqlSettings.ResultDisplayType.TextFirstHeaderOnly)
+                    else if (ResultDisplayType == ResultDisplayType.TextFirstHeaderOnly)
                     {
                         await SendResultToText(results, dbInfo, true);
                     }
-                    else if (resultDisplayType == MultiSqlSettings.ResultDisplayType.DatabaseFileName)
+                    else if (ResultDisplayType == ResultDisplayType.DatabaseFileName)
                     {
                         await SendResultToIndividualFile(results, dbInfo);
                     }
-                    else if (resultDisplayType == MultiSqlSettings.ResultDisplayType.CombinedFile)
+                    else if (ResultDisplayType == ResultDisplayType.CombinedFile)
                     {
                         await SendResultToCombinedFile(results, dbInfo);
                     }

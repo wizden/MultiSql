@@ -6,13 +6,16 @@
              xmlns:converters="clr-namespace:MultiSql.Converters"
              xmlns:views="clr-namespace:MultiSql.UserControls.Views"
              xmlns:vm="clr-namespace:MultiSql.UserControls.ViewModels"
+             xmlns:settings="clr-namespace:MultiSql.Common"
              xmlns:local="clr-namespace:MultiSql.UserControls.Views"
              mc:Ignorable="d" 
              Height="800" Width="1100" MinHeight="400" MinWidth="1100"
              d:DesignHeight="600" d:DesignWidth="900" Background="White">
     <UserControl.Resources>
         <converters:BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
+        <converters:EnumDescriptionConverter x:Key="enumDescriptionConverter" />
         <converters:InverseBooleanConverter x:Key="inverseBooleanConverter" />
+        <settings:MultiSqlSettings x:Key="multiSqlSettings" />
     </UserControl.Resources>
     <!--<UserControl.DataContext>
         <vm:MultiSqlViewModel />
@@ -104,13 +107,14 @@
                         <Border Grid.Row="1" Grid.Column="0" BorderThickness="0.8" BorderBrush="Black">
                             <WrapPanel >
                                 <TextBlock Name="TxtResultDisplayMethod" Text="Results To" Width="auto" VerticalAlignment="Center" Height="auto" />
-                                <ComboBox Name="CmbResultDisplayMethod" IsEditable="False" Width="160" Height="auto">
-                                    <ComboBoxItem Content="Different tabs" />
-                                    <ComboBoxItem Content="File per database" />
-                                    <ComboBoxItem Content="File" />
-                                    <ComboBoxItem Content="Text" />
-                                    <ComboBoxItem Content="Text - SQL Formatted" IsSelected="True" />
-                                    <ComboBoxItem Content="Text - First header only" />
+                                <ComboBox Name="CmbResultDisplayMethod" IsEditable="False" Width="160" Height="auto"
+                                          ItemsSource="{Binding ResultDisplayTypes}"
+                                          SelectedItem="{Binding ResultDisplayType}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource enumDescriptionConverter}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
                                 </ComboBox>
                             </WrapPanel>
                         </Border>
@@ -132,7 +136,7 @@
             <TextBox Grid.Row="1" Name="TxtQuery" FontFamily="Courier New" FontSize="14" 
                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
                      TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True"
-                     Height="Auto" Text="{Binding QueryAllText}" />
+                     Height="Auto" Text="{Binding QueryAllText, UpdateSourceTrigger=PropertyChanged}" />
 
             <GridSplitter Grid.Row="2" Height="10" HorizontalAlignment="Stretch" />
 

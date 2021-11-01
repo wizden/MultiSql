@@ -124,7 +124,7 @@ namespace MultiSql.UserControls.ViewModels
         /// <summary>
         ///     Gets the connection string builder for the server connection.
         /// </summary>
-        public SqlConnectionStringBuilder ConnectionStringBuilder { get; private set; }
+        public SqlConnectionStringBuilder ConnectionStringBuilder { get; set; }
 
         /// <summary>
         ///     Gets or sets the text to filter the database names.

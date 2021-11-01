@@ -589,16 +589,6 @@ namespace MultiSql.UserControls.Views
         ////}
 
         /////// <summary>
-        ///////     Show execution time for query.
-        /////// </summary>
-        /////// <param name="sender">The sender object.</param>
-        /////// <param name="e">The System.Timers.ElapsedEventArgs object.</param>
-        ////private void ExecutionTimer_Elapsed(Object sender, ElapsedEventArgs e)
-        ////{
-        ////    TxtBlkExecutionTime.Dispatcher.Invoke(() => { TxtBlkExecutionTime.Text = DateTime.UtcNow.Subtract(queryExecutionStartDateTime).ToString(@"hh\:mm\:ss"); });
-        ////}
-
-        /////// <summary>
         ///////     Event handler on collapsing the database list expander.
         /////// </summary>
         /////// <param name="sender">The expander sender object.</param>
