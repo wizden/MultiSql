@@ -15,7 +15,13 @@
     <Compile Update="MultiSqlWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="UserControls\Views\ConnectServerView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="UserControls\Views\DbCheckedListView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UserControls\Views\MultiSqlView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -26,7 +32,13 @@
     <Page Update="MultiSqlWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="UserControls\Views\ConnectServerView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="UserControls\Views\DbCheckedListView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="UserControls\Views\MultiSqlView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

@@ -4,56 +4,17 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MultiSql"
-        mc:Ignorable="d" Closing="ConnectServer_OnClosing"
+        xmlns:vm="clr-namespace:MultiSql.UserControls.ViewModels"
+        mc:Ignorable="d"
         Title="Connect Server" Height="250" MaxHeight="400" MaxWidth="600" 
-        MinHeight="250" MinWidth="400" Width="400">
+        MinHeight="250" MinWidth="400" Width="420">
+
+    <Window.DataContext>
+        <vm:ConnectServerViewModel />
+    </Window.DataContext>
+    
+
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <Grid Grid.Row="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="2*" />
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Server" HorizontalAlignment="Right" />
-            <ComboBox Grid.Row="0" Grid.Column="1" Name="CmbServerName" HorizontalAlignment="Stretch" 
-                     IsEditable="True" />
-
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Authentication" HorizontalAlignment="Right" />
-            <ComboBox Grid.Row="1" Grid.Column="1" Name="CmbAuthenticationType" HorizontalAlignment="Stretch"
-                      SelectionChanged="CmbAuthenticationType_OnSelectionChanged"/>
-
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="User Name" HorizontalAlignment="Right" />
-            <TextBox Grid.Row="2" Grid.Column="1" Name="TxtUserName" HorizontalAlignment="Stretch" MaxLength="200" />
-
-            <TextBlock Grid.Row="3" Grid.Column="0" Text="Password" HorizontalAlignment="Right" />
-            <PasswordBox Grid.Row="3" Grid.Column="1" Name="TxtPassword" HorizontalAlignment="Stretch" MaxLength="200" />
-        </Grid>
-
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Name="BtnCancel" Content="Cancel" HorizontalAlignment="Left"
-                    Click="BtnCancel_OnClick" IsCancel="True" />
-            <Button Grid.Column="1" Name="BtnConnect" Content="Connect" HorizontalAlignment="Right"
-                    Click="BtnConnect_OnClick" IsDefault="True"/>
-        </Grid>
-
-        <TextBox Grid.Row="2" Name="TxtErrors" Height="Auto" Foreground="Red" Text="Test" Visibility="Collapsed"
-                 HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" IsReadOnly="True"
-                 TextWrapping="WrapWithOverflow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        <ContentControl Content="{Binding SelectedViewModel}" />
     </Grid>
 </Window>
