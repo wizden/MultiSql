@@ -30,7 +30,15 @@ namespace MultiSql.Converters
             return enumObj.ToString();
         }
 
-        Object IValueConverter.Convert(Object value, Type targetType, Object parameter, CultureInfo culture) => GetEnumDescription((Enum) value);
+        Object IValueConverter.Convert(Object value, Type targetType, Object parameter, CultureInfo culture)
+        {
+            if (value is Enum)
+            {
+                return GetEnumDescription((Enum) value);
+            }
+
+            return null;
+        }
 
         Object IValueConverter.ConvertBack(Object value, Type targetType, Object parameter, CultureInfo culture) => String.Empty;
 

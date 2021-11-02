@@ -41,7 +41,6 @@ namespace MultiSql.UserControls.ViewModels
             executionTimer.Elapsed += ExecutionTimer_Elapsed;
 
             // TODO: Remove at commit
-            QueryAllText      = "select		*   from TestData";
             ResultDisplayType = ResultDisplayType.Text;
         }
 
@@ -113,6 +112,11 @@ namespace MultiSql.UserControls.ViewModels
         ///     Private store for the content of the query execution results.
         /// </summary>
         private String _resultsText;
+
+        /// <summary>
+        ///     Private store to indicate whether the execution should happen sequentially through the list.
+        /// </summary>
+        private Boolean _runInSequence;
 
         /// <summary>
         ///     Private store for all the databases.
@@ -208,11 +212,6 @@ namespace MultiSql.UserControls.ViewModels
         ///     The query to be executed by the request.
         /// </summary>
         private String queryToExecute = String.Empty;
-
-        /// <summary>
-        ///     Boolean to indicate whether the queries are to be run in sequence.
-        /// </summary>
-        private Boolean runInOrder;
 
         /// <summary>
         ///     Private variable to hold the command object to run the query.
@@ -433,6 +432,9 @@ namespace MultiSql.UserControls.ViewModels
             }
         }
 
+        /// <summary>
+        ///     Gets or sets the display type for the results.
+        /// </summary>
         public ResultDisplayType ResultDisplayType
         {
             get => _resultDisplayType;
@@ -446,6 +448,9 @@ namespace MultiSql.UserControls.ViewModels
             }
         }
 
+        /// <summary>
+        ///     Gets the list of available display types for results.
+        /// </summary>
         public IEnumerable<ResultDisplayType> ResultDisplayTypes => Enum.GetValues(typeof(ResultDisplayType)).Cast<ResultDisplayType>();
 
         /// <summary>
@@ -457,6 +462,19 @@ namespace MultiSql.UserControls.ViewModels
             set
             {
                 _resultsText = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        ///     Gets or sets a boolean indicating whether the execution should happen sequentially through the list.
+        /// </summary>
+        public Boolean RunInSequence
+        {
+            get => _runInSequence;
+            set
+            {
+                _runInSequence = value;
                 RaisePropertyChanged();
             }
         }
@@ -1190,7 +1208,7 @@ namespace MultiSql.UserControls.ViewModels
                 con.Close();
                 con.Dispose();
 
-                if (!runInOrder)
+                if (!RunInSequence)
                 {
                     var percentComplete =
                         (databaseQueries.Where(t => t.Status == TaskStatus.Canceled ||
@@ -1222,10 +1240,10 @@ namespace MultiSql.UserControls.ViewModels
             fileSaveLocation = String.Empty;
 
             //TODO: Pending task.
+            ////RunInSequence
             ////TabMainResults.Items.Clear();
             ////TxtBlkExecutionTime.Text  = String.Empty;
             ////TabMainResults.Visibility = Visibility.Hidden;
-            ////runInOrder                = ChkRunQueriesInOrder.IsChecked.Value;
             ////ignoreEmptyResults        = ChkIgnoreEmptyResults.IsChecked.Value;
             Logger.Debug("Preparing to run query on databases.");
 
@@ -1233,7 +1251,7 @@ namespace MultiSql.UserControls.ViewModels
             {
                 dh.QueryRetryAttempt = 0;
 
-                if (runInOrder)
+                if (RunInSequence)
                 {
                     await RunQueryOnDatabase(dh);
                 }
@@ -1247,7 +1265,7 @@ namespace MultiSql.UserControls.ViewModels
 
             try
             {
-                if (!runInOrder)
+                if (!RunInSequence)
                 {
                     await Task.WhenAll(databaseQueries);
                 }
