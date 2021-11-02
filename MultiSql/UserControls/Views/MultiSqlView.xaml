@@ -90,7 +90,7 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0" Grid.Column="0" BorderThickness="0.8" BorderBrush="Black">
-                            <CheckBox Name="ChkBoxSuccessDatabaseDeselect" Content="Deselect if _query runs successfully" VerticalAlignment="Center" />
+                            <CheckBox Name="ChkBoxSuccessDatabaseDeselect" IsChecked="{Binding DeselectOnQueryCompletion}" Content="Deselect if _query runs successfully" VerticalAlignment="Center" />
                         </Border>
 
                         <Border Grid.Row="0" Grid.Column="1" BorderThickness="0.8" BorderBrush="Black">

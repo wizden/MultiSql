@@ -84,6 +84,11 @@ namespace MultiSql.UserControls.ViewModels
         private String _delimiterCharacter = String.Empty;
 
         /// <summary>
+        ///     Private store to indicate whether the database is no longer marked for query selection after execution.
+        /// </summary>
+        private Boolean _deselectOnQueryCompletion;
+
+        /// <summary>
         ///     Private store for the errors in the query or execution.
         /// </summary>
         private String _errors;
@@ -292,6 +297,19 @@ namespace MultiSql.UserControls.ViewModels
                          ResultDisplayType == ResultDisplayType.TextFirstHeaderOnly;
 
                 return retVal;
+            }
+        }
+
+        /// <summary>
+        ///     Boolean indicating whether the database is no longer marked for query selection after execution.
+        /// </summary>
+        public Boolean DeselectOnQueryCompletion
+        {
+            get => _deselectOnQueryCompletion;
+            set
+            {
+                _deselectOnQueryCompletion = value;
+                RaisePropertyChanged();
             }
         }
 
@@ -1001,9 +1019,6 @@ namespace MultiSql.UserControls.ViewModels
 
             executionTimer.Stop();
             var queryEndTime = DateTime.UtcNow;
-
-            //TODO: Associate with user control.
-            ////TxtBlkExecutionTime.Text = queryEndTime.Subtract(queryExecutionStartDateTime).ToString(@"hh\:mm\:ss");
             QueryExecutionTimeText = queryEndTime.Subtract(queryExecutionStartDateTime).ToString(@"hh\:mm\:ss");
             IsQueryRunning         = false;
         }
@@ -1235,14 +1250,14 @@ namespace MultiSql.UserControls.ViewModels
             cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Token.ThrowIfCancellationRequested();
 
-            ResultsText      = String.Empty;
-            ProgressText     = String.Format("Completed {0} of {1}", SiteCounter, SitesToRun);
-            fileSaveLocation = String.Empty;
+            ResultsText            = String.Empty;
+            ProgressText           = String.Format("Completed {0} of {1}", SiteCounter, SitesToRun);
+            fileSaveLocation       = String.Empty;
+            QueryExecutionTimeText = String.Empty;
 
             //TODO: Pending task.
             ////RunInSequence
             ////TabMainResults.Items.Clear();
-            ////TxtBlkExecutionTime.Text  = String.Empty;
             ////TabMainResults.Visibility = Visibility.Hidden;
             ////ignoreEmptyResults        = ChkIgnoreEmptyResults.IsChecked.Value;
             Logger.Debug("Preparing to run query on databases.");
@@ -1620,11 +1635,10 @@ namespace MultiSql.UserControls.ViewModels
             QueryExecutionTimeText = DateTime.UtcNow.Subtract(queryExecutionStartDateTime).
                                               ToString(@"hh\:mm\:ss");
 
-            // TODO: Pending Task
-            ////if (ChkBoxSuccessDatabaseDeselect.IsChecked.Value)
-            ////{
-            ////    dbInfo.QueryExecutionRequested = false;
-            ////}
+            if (DeselectOnQueryCompletion)
+            {
+                dbInfo.QueryExecutionRequested = false;
+            }
         }
 
         /// <summary>
