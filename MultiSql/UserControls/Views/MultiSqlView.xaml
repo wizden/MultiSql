@@ -12,7 +12,8 @@
              Height="800" Width="1100" MinHeight="400" MinWidth="1100"
              d:DesignHeight="600" d:DesignWidth="900" Background="White">
     <UserControl.Resources>
-        <converters:BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
+        <converters:BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" TrueValue="Visible" FalseValue="Collapsed" />
+        <converters:BooleanToVisibilityConverter x:Key="booleanToCollapsedConverter" TrueValue="Collapsed" FalseValue="Visible" />
         <converters:EnumDescriptionConverter x:Key="enumDescriptionConverter" />
         <converters:InverseBooleanConverter x:Key="inverseBooleanConverter" />
         <settings:MultiSqlSettings x:Key="multiSqlSettings" />
@@ -127,7 +128,7 @@
                         </Border>
 
                         <Border Grid.Row="1" Grid.Column="2" BorderThickness="0.8" BorderBrush="Black">
-                            <CheckBox Name="ChkIgnoreEmptyResults" Content="_Ignore Empty Results" VerticalAlignment="Center" ToolTip="Ignore sites with no results." />
+                            <CheckBox Name="ChkIgnoreEmptyResults" Content="_Ignore Empty Results" VerticalAlignment="Top" ToolTip="Ignore sites with no results." Margin="5,12,5,0" />
                         </Border>
                     </Grid>
                 </Expander>
@@ -143,9 +144,9 @@
             <Border Grid.Row="3" BorderThickness="0.8" BorderBrush="Black">
                 <Grid Name="GrdResults">
                     <TextBox Name="TxtBlkResults" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
-                             FontFamily="Courier New" Height="Auto" FontSize="14" Visibility="Hidden" IsReadOnlyCaretVisible="True" IsReadOnly="True" 
+                             FontFamily="Courier New" Height="Auto" FontSize="14" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToVisibilityConverter}}" IsReadOnlyCaretVisible="True" IsReadOnly="True" 
                              AcceptsReturn="True" Text="{Binding ResultsText}" />
-                    <TabControl Name="TabMainResults" Visibility="Hidden" />
+                    <TabControl Name="TabMainResults" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToCollapsedConverter}}" />
                 </Grid>
             </Border>
 

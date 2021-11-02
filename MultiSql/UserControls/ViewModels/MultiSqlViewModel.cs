@@ -29,9 +29,13 @@ namespace MultiSql.UserControls.ViewModels
     public class MultiSqlViewModel : ViewModelBase
     {
 
+        #region Public Constructors
+
+        /// <summary>
+        ///     Initialises a new instance of the <see cref="MultiSqlViewModel" /> class.
+        /// </summary>
         public MultiSqlViewModel()
         {
-
             DatabaseListViewModel  =  new DbCheckedListViewModel();
             executionTimer         =  new Timer(1000);
             executionTimer.Elapsed += ExecutionTimer_Elapsed;
@@ -41,6 +45,7 @@ namespace MultiSql.UserControls.ViewModels
             ResultDisplayType = ResultDisplayType.Text;
         }
 
+        #endregion Public Constructors
 
         #region Private Fields
 
@@ -65,11 +70,6 @@ namespace MultiSql.UserControls.ViewModels
         private readonly String editorContentFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EditorContent.txt");
 
         /// <summary>
-        ///     Private store for the errors in the query or execution.
-        /// </summary>
-        private String _errors;
-
-        /// <summary>
         ///     The timer to measure query execution time.
         /// </summary>
         private readonly Timer executionTimer;
@@ -78,6 +78,41 @@ namespace MultiSql.UserControls.ViewModels
         ///     Private store for a lock object to prevent multiple threads accessing the same area of code.
         /// </summary>
         private readonly Object lockObject = new();
+
+        /// <summary>
+        ///     Private store for the delimiter character.
+        /// </summary>
+        private String _delimiterCharacter = String.Empty;
+
+        /// <summary>
+        ///     Private store for the errors in the query or execution.
+        /// </summary>
+        private String _errors;
+
+        /// <summary>
+        ///     Private store indicating whether the results are displayed to a textbox.
+        /// </summary>
+        private Boolean _isResultsToText;
+
+        /// <summary>
+        ///     Private store for the execution progress text.
+        /// </summary>
+        private String _progressText = String.Empty;
+
+        /// <summary>
+        ///     Private store for the content of the editor queries.
+        /// </summary>
+        private String _queryAllText;
+
+        /// <summary>
+        ///     Private store for the time taken to execute the query.
+        /// </summary>
+        private String _queryExecutionTimeText;
+
+        /// <summary>
+        ///     Private store for the content of the query execution results.
+        /// </summary>
+        private String _resultsText;
 
         /// <summary>
         ///     Private store for all the databases.
@@ -113,11 +148,6 @@ namespace MultiSql.UserControls.ViewModels
         ///     Private store for the list of tasks to be run for each database.
         /// </summary>
         private List<Task> databaseQueries;
-
-        /// <summary>
-        ///     Private store for the delimiter character.
-        /// </summary>
-        private String _delimiterCharacter = String.Empty;
 
         /// <summary>
         ///     Private store to hold a value if the save operation has been cancelled.
@@ -165,11 +195,6 @@ namespace MultiSql.UserControls.ViewModels
         private String previousFileSaveLocation = String.Empty;
 
         /// <summary>
-        ///     Private store for the execution progress text.
-        /// </summary>
-        private String _progressText = String.Empty;
-
-        /// <summary>
         ///     Private store for the list of queries to be executed.
         /// </summary>
         private List<String> queriesToExecute = new();
@@ -180,24 +205,9 @@ namespace MultiSql.UserControls.ViewModels
         private DateTime queryExecutionStartDateTime;
 
         /// <summary>
-        ///     Private store for the content of the editor queries.
-        /// </summary>
-        private String _queryAllText;
-
-        /// <summary>
-        ///     Private store for the time taken to execute the query.
-        /// </summary>
-        private String _queryExecutionTimeText;
-
-        /// <summary>
         ///     The query to be executed by the request.
         /// </summary>
         private String queryToExecute = String.Empty;
-
-        /// <summary>
-        ///     Private store for the content of the query execution results.
-        /// </summary>
-        private String _resultsText;
 
         /// <summary>
         ///     Boolean to indicate whether the queries are to be run in sequence.
@@ -228,32 +238,12 @@ namespace MultiSql.UserControls.ViewModels
 
         #region Public Properties
 
-        public String QueryAllText
-        {
-            get => _queryAllText;
-            set
-            {
-                _queryAllText = value;
-                RaisePropertyChanged();
-            }
-        }
-
-        public String Errors
-        {
-            get => _errors;
-            set
-            {
-                _errors = value;
-                RaisePropertyChanged();
-            }
-        }
+        private ResultDisplayType _resultDisplayType;
 
         /// <summary>
         ///     Gets a store for all the databases.
         /// </summary>
         public ObservableCollection<DbInfo> AllDatabases => DatabaseListViewModel.AllDatabases;
-
-        public DbCheckedListViewModel DatabaseListViewModel { get; }
 
         /// <summary>
         ///     Gets the relay command object to cancel the query.
@@ -273,6 +263,8 @@ namespace MultiSql.UserControls.ViewModels
             private set => connectionTimeout = value == 0 ? 30 : value;
         }
 
+        public DbCheckedListViewModel DatabaseListViewModel { get; }
+
         /// <summary>
         ///     Gets or set the delimiter character.
         /// </summary>
@@ -285,7 +277,6 @@ namespace MultiSql.UserControls.ViewModels
                 RaisePropertyChanged();
             }
         }
-
 
         /// <summary>
         ///     Gets a value indicating whether the delimiter character is available.
@@ -302,6 +293,19 @@ namespace MultiSql.UserControls.ViewModels
                          ResultDisplayType == ResultDisplayType.TextFirstHeaderOnly;
 
                 return retVal;
+            }
+        }
+
+        /// <summary>
+        ///     Gets or sets the list of errors.
+        /// </summary>
+        public String Errors
+        {
+            get => _errors;
+            set
+            {
+                _errors = value;
+                RaisePropertyChanged();
             }
         }
 
@@ -329,6 +333,19 @@ namespace MultiSql.UserControls.ViewModels
             {
                 isQueryRunning                       = value;
                 DatabaseListViewModel.IsQueryRunning = isQueryRunning;
+                RaisePropertyChanged();
+            }
+        }
+
+        /// <summary>
+        ///     Boolean indicating whether the results are displayed to a textbox.
+        /// </summary>
+        public Boolean IsResultsToText
+        {
+            get => _isResultsToText;
+            set
+            {
+                _isResultsToText = value;
                 RaisePropertyChanged();
             }
         }
@@ -393,6 +410,16 @@ namespace MultiSql.UserControls.ViewModels
             }
         }
 
+        public String QueryAllText
+        {
+            get => _queryAllText;
+            set
+            {
+                _queryAllText = value;
+                RaisePropertyChanged();
+            }
+        }
+
         /// <summary>
         ///     Gets the time taken to execute the query.
         /// </summary>
@@ -406,6 +433,21 @@ namespace MultiSql.UserControls.ViewModels
             }
         }
 
+        public ResultDisplayType ResultDisplayType
+        {
+            get => _resultDisplayType;
+
+            set
+            {
+                _resultDisplayType = value;
+                IsResultsToText    = ResultDisplayType != ResultDisplayType.DifferentTabs;
+                RaisePropertyChanged();
+
+            }
+        }
+
+        public IEnumerable<ResultDisplayType> ResultDisplayTypes => Enum.GetValues(typeof(ResultDisplayType)).Cast<ResultDisplayType>();
+
         /// <summary>
         ///     Gest the results content of the query execution.
         /// </summary>
@@ -418,22 +460,6 @@ namespace MultiSql.UserControls.ViewModels
                 RaisePropertyChanged();
             }
         }
-
-        public IEnumerable<ResultDisplayType> ResultDisplayTypes => Enum.GetValues(typeof(ResultDisplayType)).Cast<ResultDisplayType>();
-
-        private ResultDisplayType _resultDisplayType;
-
-        public ResultDisplayType ResultDisplayType
-        {
-            get => _resultDisplayType;
-            set
-            {
-                _resultDisplayType = value;
-                RaisePropertyChanged();
-
-            }
-        }
-
 
         /// <summary>
         ///     Gets the relay command object to run the query.
@@ -1191,16 +1217,16 @@ namespace MultiSql.UserControls.ViewModels
             cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Token.ThrowIfCancellationRequested();
 
+            ResultsText      = String.Empty;
+            ProgressText     = String.Format("Completed {0} of {1}", SiteCounter, SitesToRun);
+            fileSaveLocation = String.Empty;
+
             //TODO: Pending task.
             ////TabMainResults.Items.Clear();
             ////TxtBlkExecutionTime.Text  = String.Empty;
             ////TabMainResults.Visibility = Visibility.Hidden;
-            ////TxtBlkResults.Text        = String.Empty;
-            ////TxtBlkResults.Visibility  = Visibility.Hidden;
-            ////fileSaveLocation          = String.Empty;
             ////runInOrder                = ChkRunQueriesInOrder.IsChecked.Value;
             ////ignoreEmptyResults        = ChkIgnoreEmptyResults.IsChecked.Value;
-            ////TxtBlkProgressText.Text   = String.Format("Completed {0} of {1}", SiteCounter, SitesToRun);
             Logger.Debug("Preparing to run query on databases.");
 
             foreach (var dh in dbInfos.OrderBy(dh => dh.Database).ToList())
