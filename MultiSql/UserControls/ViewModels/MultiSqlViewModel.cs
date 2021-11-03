@@ -94,6 +94,11 @@ namespace MultiSql.UserControls.ViewModels
         private String _errors;
 
         /// <summary>
+        ///     Private store to indicate whether empty results are ignored.
+        /// </summary>
+        private Boolean _ignoreEmptyResults;
+
+        /// <summary>
         ///     Private store indicating whether the results are displayed to a textbox.
         /// </summary>
         private Boolean _isResultsToText;
@@ -336,6 +341,19 @@ namespace MultiSql.UserControls.ViewModels
                 return AllDatabases != null
                            ? String.Format("{0} of {1}", AllDatabases.Count(dh => dh.QueryExecutionRequested).ToString(), AllDatabases.Count().ToString())
                            : String.Empty;
+            }
+        }
+
+        /// <summary>
+        ///     Boolean indicating whether empty results are ignored.
+        /// </summary>
+        public Boolean IgnoreEmptyResults
+        {
+            get => _ignoreEmptyResults;
+            set
+            {
+                _ignoreEmptyResults = value;
+                RaisePropertyChanged();
             }
         }
 
@@ -648,43 +666,6 @@ namespace MultiSql.UserControls.ViewModels
 
         // TODO: Pending Task
         /////// <summary>
-        ///////     Determine the way the results are to be displayed.
-        /////// </summary>
-        /////// <param name="sender">The sender object.</param>
-        /////// <param name="e">The SelectionChangedEventArgs object.</param>
-        ////private void CmbResultDisplayMethod_SelectionChanged(Object sender, SelectionChangedEventArgs e)
-        ////{
-        ////    switch (((ComboBoxItem) CmbResultDisplayMethod.SelectedItem).Content.ToString())
-        ////    {
-        ////        case "Text":
-        ////            resultDisplayType = MultiSqlSettings.ResultDisplayType.Text;
-        ////            break;
-
-        ////        case "Text - SQL Formatted":
-        ////            resultDisplayType = MultiSqlSettings.ResultDisplayType.TextSqlFormatted;
-        ////            break;
-
-        ////        case "Text - First header only":
-        ////            resultDisplayType = MultiSqlSettings.ResultDisplayType.TextFirstHeaderOnly;
-        ////            break;
-
-        ////        case "File":
-        ////            resultDisplayType = MultiSqlSettings.ResultDisplayType.CombinedFile;
-        ////            break;
-
-        ////        case "File per database":
-        ////            resultDisplayType = MultiSqlSettings.ResultDisplayType.DatabaseFileName;
-        ////            break;
-
-        ////        default:
-        ////            resultDisplayType = MultiSqlSettings.ResultDisplayType.DifferentTabs;
-        ////            break;
-        ////    }
-
-        ////    RaisePropertyChanged("DelimiterCharacterAvailable");
-        ////}
-
-        /////// <summary>
         ///////     Ensure correct display of column name for DataGrid - see
         ///////     http://stackoverflow.com/questions/9403782/first-underscore-in-a-datagridcolumnheader-gets-removed
         /////// </summary>
@@ -814,7 +795,7 @@ namespace MultiSql.UserControls.ViewModels
                     totalRows += dataTable.Rows.Count;
                 }
 
-                if (totalRows > 0 || !ignoreEmptyResults)
+                if (totalRows > 0 || !IgnoreEmptyResults)
                 {
                     foreach (DataTable dataTable in dataSet.Tables)
                     {
@@ -1256,10 +1237,8 @@ namespace MultiSql.UserControls.ViewModels
             QueryExecutionTimeText = String.Empty;
 
             //TODO: Pending task.
-            ////RunInSequence
             ////TabMainResults.Items.Clear();
             ////TabMainResults.Visibility = Visibility.Hidden;
-            ////ignoreEmptyResults        = ChkIgnoreEmptyResults.IsChecked.Value;
             Logger.Debug("Preparing to run query on databases.");
 
             foreach (var dh in dbInfos.OrderBy(dh => dh.Database).ToList())
@@ -1484,7 +1463,7 @@ namespace MultiSql.UserControls.ViewModels
         ////            totalRows += dataTable.Rows.Count;
         ////        }
 
-        ////        if (!(ignoreEmptyResults && totalRows == 0))
+        ////        if (!(IgnoreEmptyResults && totalRows == 0))
         ////        {
         ////            foreach (DataTable dataTable in dataSet.Tables)
         ////            {

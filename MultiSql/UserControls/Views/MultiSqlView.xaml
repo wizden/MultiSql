@@ -128,7 +128,7 @@
                         </Border>
 
                         <Border Grid.Row="1" Grid.Column="2" BorderThickness="0.8" BorderBrush="Black">
-                            <CheckBox Name="ChkIgnoreEmptyResults" Content="_Ignore Empty Results" VerticalAlignment="Top" ToolTip="Ignore sites with no results." Margin="5,12,5,0" />
+                            <CheckBox Name="ChkIgnoreEmptyResults" IsChecked="{Binding IgnoreEmptyResults}" Content="_Ignore Empty Results" VerticalAlignment="Top" ToolTip="Ignore sites with no results." Margin="5,12,5,0" />
                         </Border>
                     </Grid>
                 </Expander>
