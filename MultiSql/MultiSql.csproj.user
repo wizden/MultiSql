@@ -9,24 +9,30 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="ConnectServer.xaml.cs">
+    <Compile Update="MultiSqlWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="MultiSqlWindow.xaml.cs">
+    <Compile Update="UserControls\Views\ConnectServerView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="UserControls\Views\DbCheckedListView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="UserControls\Views\MultiSqlView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="ConnectServer.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="MultiSqlWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="UserControls\Views\ConnectServerView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="UserControls\Views\DbCheckedListView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="UserControls\Views\MultiSqlView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

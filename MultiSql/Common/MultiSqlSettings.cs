@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
@@ -8,7 +9,7 @@ namespace MultiSql.Common
     /// <summary>
     ///     Class to handle common scenarios.
     /// </summary>
-    class MultiSqlSettings
+    public class MultiSqlSettings
     {
 
         #region Private Fields
@@ -41,32 +42,32 @@ namespace MultiSql.Common
             /// <summary>
             ///     Save result to different tabs.
             /// </summary>
-            DifferentTabs = 0,
+            [Description("Different Tabs")] DifferentTabs = 0,
 
             /// <summary>
             ///     Save result to text.
             /// </summary>
-            Text = 1,
+            [Description("Text")] Text = 1,
 
             /// <summary>
             ///     Save result to file named per database.
             /// </summary>
-            DatabaseFileName = 2,
+            [Description("File Per Database")] DatabaseFileName = 2,
 
             /// <summary>
             ///     Save result to a single file with results from all databases.
             /// </summary>
-            CombinedFile = 3,
+            [Description("Combined File")] CombinedFile = 3,
 
             /// <summary>
             ///     Save result to text without headers.
             /// </summary>
-            TextFirstHeaderOnly = 4,
+            [Description("Single Header Results")] TextFirstHeaderOnly = 4,
 
             /// <summary>
             ///     Save result to text with SSMS like text formatting.
             /// </summary>
-            TextSqlFormatted = 5
+            [Description("SQL Formatted")] TextSqlFormatted = 5
 
         }
 

@@ -21,6 +21,8 @@ namespace MultiSql.UserControls.ViewModels
     public class DbCheckedListViewModel : ViewModelBase
     {
 
+        public event EventHandler ChangeConnection;
+
         #region Private Fields
 
         /// <summary>
@@ -98,7 +100,7 @@ namespace MultiSql.UserControls.ViewModels
         /// </summary>
         public RelayCommand CmdChangeConnection
         {
-            get { return _cmdChangeConnection ??= new RelayCommand(execute => ChangeConnection(), canExecute => !isQueryRunning); }
+            get { return _cmdChangeConnection ??= new RelayCommand(execute => ChangeSQLConnection(), canExecute => !isQueryRunning); }
         }
 
         /// <summary>
@@ -122,7 +124,7 @@ namespace MultiSql.UserControls.ViewModels
         /// <summary>
         ///     Gets the connection string builder for the server connection.
         /// </summary>
-        public SqlConnectionStringBuilder ConnectionStringBuilder { get; private set; }
+        public SqlConnectionStringBuilder ConnectionStringBuilder { get; set; }
 
         /// <summary>
         ///     Gets or sets the text to filter the database names.
@@ -214,29 +216,37 @@ namespace MultiSql.UserControls.ViewModels
         /// <summary>
         ///     Change the connection for the control.
         /// </summary>
-        private void ChangeConnection()
+        private void ChangeSQLConnection()
         {
-            var cs = new ConnectServer();
-            cs.ShowDialog();
+            ChangeConnection?.Invoke(this, EventArgs.Empty);
 
-            if (!String.IsNullOrWhiteSpace(cs.ServerConnectionString))
-            {
-                if (cs.Databases.Count > 0)
-                {
-                    ErrorText = String.Empty;
-                    var retVal = new ObservableCollection<DbInfo>();
-                    ConnectionStringBuilder = new SqlConnectionStringBuilder(cs.ServerConnectionString);
-                    RaisePropertyChanged("ConnectionStringBuilder");
+            ////var cs = new ConnectServer();
+            ////cs.ShowDialog();
 
-                    foreach (var database in cs.Databases)
-                    {
-                        var dh = new DbInfo(ConnectionStringBuilder.DataSource, database.Replace("_", "__"));
-                        retVal.Add(dh);
-                    }
+            ////////if (cs.DataContext != null && cs.DataContext is ConnectServerViewModel)
+            ////////{
+            ////////    var response = (ConnectServerViewModel) cs.DataContext;
+            ////////    var temp     = response.Databases.Count();
+            ////////}
 
-                    AllDatabases = retVal;
-                }
-            }
+            ////if (!String.IsNullOrWhiteSpace(cs.ServerConnectionString))
+            ////{
+            ////    if (cs.Databases.Count > 0)
+            ////    {
+            ////        ErrorText = String.Empty;
+            ////        var retVal = new ObservableCollection<DbInfo>();
+            ////        ConnectionStringBuilder = new SqlConnectionStringBuilder(cs.ServerConnectionString);
+            ////        RaisePropertyChanged("ConnectionStringBuilder");
+
+            ////        foreach (var database in cs.Databases)
+            ////        {
+            ////            var dh = new DbInfo(ConnectionStringBuilder.DataSource, database.Replace("_", "__"));
+            ////            retVal.Add(dh);
+            ////        }
+
+            ////        AllDatabases = retVal;
+            ////    }
+            ////}
         }
 
         /// <summary>
