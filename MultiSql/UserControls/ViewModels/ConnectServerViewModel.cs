@@ -40,6 +40,7 @@ namespace MultiSql.UserControls.ViewModels
         private          RelayCommand            cmdConnect;
         private          Boolean                 connectionInProgress;
         private          XDocument               connectionListDocument;
+        private          String                  _errors;
         private          String                  selectedAuthenticationType;
 
         #endregion Private Fields
@@ -55,16 +56,15 @@ namespace MultiSql.UserControls.ViewModels
         public ConnectServerViewModel()
         {
             Logger.Debug("Opening Connection window.");
-            SelectedViewModel          = this;
             SelectedAuthenticationType = WindowsAuth;
+            Errors                     = String.Empty;
+            cancellationTokenSource    = new CancellationTokenSource();
             LoadConnectionsAsync();
         }
 
         #endregion Public Constructors
 
         #region Public Properties
-
-        private ViewModelBase _selectedViewModel;
 
         public List<String> AuthenticationTypes
         {
@@ -73,7 +73,7 @@ namespace MultiSql.UserControls.ViewModels
 
         public RelayCommand CmdCancel
         {
-            get { return cmdCancel ??= new RelayCommand(async execute => await CancelConnection(), canExecute => connectionInProgress); }
+            get { return cmdCancel ??= new RelayCommand(async execute => await CancelConnection(), canExecute => true); }
         }
 
         public RelayCommand CmdConnect
@@ -93,7 +93,15 @@ namespace MultiSql.UserControls.ViewModels
 
         public ReadOnlyCollection<String> Databases => _databases?.AsReadOnly();
 
-        public String Errors { get; set; }
+        public String Errors
+        {
+            get => _errors;
+            set
+            {
+                _errors = value;
+                RaisePropertyChanged();
+            }
+        }
 
         public SecureString Password { get; set; }
 
@@ -106,16 +114,6 @@ namespace MultiSql.UserControls.ViewModels
                 selectedAuthenticationType = value;
                 RaisePropertyChanged();
                 RaisePropertyChanged("SqlAuthenticationRequested");
-            }
-        }
-
-        public ViewModelBase SelectedViewModel
-        {
-            get => _selectedViewModel;
-            set
-            {
-                _selectedViewModel = value;
-                RaisePropertyChanged();
             }
         }
 
@@ -132,20 +130,17 @@ namespace MultiSql.UserControls.ViewModels
         private async Task CancelConnection()
         {
             Logger.Debug("Cancelling the connection window.");
-
-            if (connectionInProgress)
-            {
-                cancellationTokenSource.Cancel();
-                connectionInProgress = false;
-            }
+            cancellationTokenSource.Cancel();
+            connectionInProgress = false;
+            ConnectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private async Task ConnectToDbAsync()
         {
             connectionInProgress    = true;
+            Errors                  = String.Empty;
+            _databases              = new List<String>();
             cancellationTokenSource = new CancellationTokenSource();
-            SetErrorText(String.Empty);
-            _databases = new List<String>();
             var connString = new SqlConnectionStringBuilder();
             connString.DataSource               = ServerName;
             connString.IntegratedSecurity       = !SqlAuthenticationRequested;
@@ -187,7 +182,7 @@ namespace MultiSql.UserControls.ViewModels
             }
             catch (Exception exception)
             {
-                SetErrorText(exception.Message);
+                Errors = exception.Message;
                 Logger.Error(exception);
             }
             finally
@@ -275,11 +270,6 @@ namespace MultiSql.UserControls.ViewModels
 
                                connectionListDocument.Save(MultiSqlSettings.ConnectionsListFile);
                            });
-        }
-
-        private void SetErrorText(String errorText)
-        {
-            Errors = errorText;
         }
 
         #endregion Private Methods

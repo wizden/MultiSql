@@ -37,16 +37,19 @@ namespace MultiSql.UserControls.ViewModels
         private void ConnectServerViewModel_ConnectionChanged(Object sender, EventArgs e)
         {
             var connectServer = sender as ConnectServerViewModel;
-            _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Clear();
-            _multiSqlViewModel.DatabaseListViewModel.ConnectionStringBuilder = new SqlConnectionStringBuilder(connectServer.ServerConnectionString);
 
-            foreach (var database in connectServer.Databases)
+            if (!String.IsNullOrWhiteSpace(connectServer.ServerConnectionString))
             {
-                _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Add(new DbInfo(connectServer.ServerName, database));
+                _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Clear();
+                _multiSqlViewModel.DatabaseListViewModel.ConnectionStringBuilder = new SqlConnectionStringBuilder(connectServer.ServerConnectionString);
+
+                foreach (var database in connectServer.Databases)
+                {
+                    _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Add(new DbInfo(connectServer.ServerName, database));
+                }
             }
 
-
-            SelectedViewModel                                     = _multiSqlViewModel;
+            SelectedViewModel = _multiSqlViewModel;
         }
 
         private void DatabaseListViewModel_ChangeConnection(Object sender, EventArgs e)
