@@ -16,6 +16,7 @@
         <converters:BooleanToVisibilityConverter x:Key="booleanToCollapsedConverter" TrueValue="Collapsed" FalseValue="Visible" />
         <converters:EnumDescriptionConverter x:Key="enumDescriptionConverter" />
         <converters:InverseBooleanConverter x:Key="inverseBooleanConverter" />
+        <converters:CountToVisibilityConverter x:Key="countToVisibilityConverter" />
         <settings:MultiSqlSettings x:Key="multiSqlSettings" />
     </UserControl.Resources>
     <!--<UserControl.DataContext>
@@ -152,10 +153,10 @@
 
             <GridSplitter Grid.Row="4" Name="GrdSplitResultsErrors" Height="10" HorizontalAlignment="Stretch" />
 
-            <Border Grid.Row="5" Name="BrdrErrors" Visibility="Collapsed">
-                <TextBox Name="TxtErrors" IsReadOnly="True" AcceptsReturn="True" 
+            <Border Grid.Row="5" Name="BrdrErrors" Visibility="{Binding Errors.Length, Converter={StaticResource countToVisibilityConverter}}">
+                <TextBox Name="TxtErrors" IsReadOnly="True" Text="{Binding Errors}" AcceptsReturn="True" 
                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
-                     TextWrapping="Wrap" Height="auto" />
+                     TextWrapping="Wrap" Height="auto" MaxHeight="200" />
             </Border>
 
             <Grid Grid.Row="6" Width="auto">

@@ -584,25 +584,12 @@ namespace MultiSql.UserControls.ViewModels
             if (String.IsNullOrWhiteSpace(message))
             {
                 Errors = String.Empty;
-
-                // TODO: Pending Task
-                //GrdRowErrors.Height = GridLength.Auto;
             }
             else
             {
                 Errors += message + "\r\n\r\n";
-
-                // TODO: Pending Task
-                //GrdRowErrors.Height = new GridLength(2, GridUnitType.Star);
                 Logger.Error(message);
             }
-
-            var hasErrors = Errors.Trim().Length > 0;
-
-            // TODO: Pending Task
-            //BrdrErrors.Visibility = hasErrors ? Visibility.Visible : Visibility.Collapsed;
-            //GrdSplitResultsErrors.Visibility = hasErrors ? Visibility.Visible : Visibility.Collapsed;
-            //GrdRowErrors.MinHeight = hasErrors ? 50 : 0;
         }
 
         /// <summary>
