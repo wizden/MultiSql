@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:MultiSql"
         xmlns:converters="clr-namespace:MultiSql.Converters"
-        xmlns:views="clr-namespace:MultiSql.UserControls.Views"
-        xmlns:vm="clr-namespace:MultiSql.UserControls.ViewModels"
+        xmlns:views="clr-namespace:MultiSql.Views"
+        xmlns:vm="clr-namespace:MultiSql.ViewModels"
         x:Name="MultiSqlWindowMain"
         PreviewKeyDown="Window_PreviewKeyDown"
         Title="Multi Sql" Height="800" Width="1100" MinHeight="400" MinWidth="900">

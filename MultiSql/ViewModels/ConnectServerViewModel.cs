@@ -13,7 +13,7 @@ using MultiSql.Common;
 using MultiSql.Models;
 using NLog;
 
-namespace MultiSql.UserControls.ViewModels
+namespace MultiSql.ViewModels
 {
     internal class ConnectServerViewModel : ViewModelBase
     {

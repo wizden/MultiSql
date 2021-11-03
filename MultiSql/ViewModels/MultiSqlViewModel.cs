@@ -24,7 +24,7 @@ using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using Timer = System.Timers.Timer;
 
-namespace MultiSql.UserControls.ViewModels
+namespace MultiSql.ViewModels
 {
     public class MultiSqlViewModel : ViewModelBase
     {

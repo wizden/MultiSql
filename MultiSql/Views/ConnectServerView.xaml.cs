@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using MultiSql.UserControls.ViewModels;
+using MultiSql.ViewModels;
 
-namespace MultiSql.UserControls.Views
+namespace MultiSql.Views
 {
     /// <summary>
     /// Interaction logic for ConnectServerView.xaml

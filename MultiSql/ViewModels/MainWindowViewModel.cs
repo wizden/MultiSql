@@ -2,7 +2,7 @@
 using System.Data.SqlClient;
 using MultiSql.Common;
 
-namespace MultiSql.UserControls.ViewModels
+namespace MultiSql.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {

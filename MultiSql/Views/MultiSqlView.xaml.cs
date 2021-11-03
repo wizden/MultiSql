@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace MultiSql.UserControls.Views
+namespace MultiSql.Views
 {
     /// <summary>
     ///     Interaction logic for MultiSqlView.xaml
