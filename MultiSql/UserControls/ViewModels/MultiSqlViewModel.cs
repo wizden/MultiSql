@@ -41,7 +41,6 @@ namespace MultiSql.UserControls.ViewModels
             executionTimer.Elapsed += ExecutionTimer_Elapsed;
 
             // TODO: Remove at commit
-            QueryAllText      = "SELECT TOP 10 * FROM PayResultsMisc ";
             ResultDisplayType = ResultDisplayType.Text;
         }
 
