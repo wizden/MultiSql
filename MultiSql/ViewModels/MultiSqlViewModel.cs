@@ -16,6 +16,7 @@ using System.Windows.Input;
 using System.Xml;
 using System.Xml.Schema;
 using MultiSql.Common;
+using MultiSql.Models;
 using NLog;
 using static MultiSql.Common.MultiSqlSettings;
 using MessageBox = System.Windows.MessageBox;
@@ -24,7 +25,7 @@ using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using Timer = System.Timers.Timer;
 
-namespace MultiSql.UserControls.ViewModels
+namespace MultiSql.ViewModels
 {
     public class MultiSqlViewModel : ViewModelBase
     {
@@ -127,6 +128,11 @@ namespace MultiSql.UserControls.ViewModels
         ///     Private store to indicate whether the execution should happen sequentially through the list.
         /// </summary>
         private Boolean _runInSequence;
+
+        /// <summary>
+        ///     Private store for the collection of tab items on running queries when the ResultType is set to "Tabs".
+        /// </summary>
+        private ObservableCollection<ITabItem> _tabItems;
 
         /// <summary>
         ///     Private store for all the databases.
@@ -560,10 +566,24 @@ namespace MultiSql.UserControls.ViewModels
             }
         }
 
+        /// <summary>
+        ///     Gets or sets the collection of tab items on running queries when the ResultType is set to "Tabs".
+        /// </summary>
+        public ObservableCollection<ITabItem> TabItems
+        {
+            get => _tabItems;
+            set
+            {
+                _tabItems = value;
+                RaisePropertyChanged();
+            }
+        }
+
         #endregion Public Properties
 
         #region Private Methods
 
+        ///     TODO: Pending Task
         /////// <summary>
         ///////     Add a row number to the left-most column on the data grid.
         /////// </summary>
@@ -571,7 +591,6 @@ namespace MultiSql.UserControls.ViewModels
         /////// <param name="e">The DataGridRowEventArgs object.</param>
         ////private void AddRowNumberOn_LoadingRow(Object sender, DataGridRowEventArgs e)
         ////{
-        ///     TODO: Pending Task
         ////    e.Row.Header = (e.Row.GetIndex() + 1).ToString();
         ////}
 
@@ -1214,6 +1233,7 @@ namespace MultiSql.UserControls.ViewModels
         /// <returns>Task object indicating the completion status.</returns>
         private async Task RunQueryOnDatabasesAsync(List<DbInfo> dbInfos)
         {
+            Logger.Debug("Preparing to run query on databases.");
             databaseQueries         = new List<Task>();
             cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Token.ThrowIfCancellationRequested();
@@ -1223,10 +1243,10 @@ namespace MultiSql.UserControls.ViewModels
             fileSaveLocation       = String.Empty;
             QueryExecutionTimeText = String.Empty;
 
-            //TODO: Pending task.
-            ////TabMainResults.Items.Clear();
-            ////TabMainResults.Visibility = Visibility.Hidden;
-            Logger.Debug("Preparing to run query on databases.");
+            if (ResultDisplayType == ResultDisplayType.DifferentTabs)
+            {
+                TabItems = new ObservableCollection<ITabItem>();
+            }
 
             foreach (var dh in dbInfos.OrderBy(dh => dh.Database).ToList())
             {
@@ -1431,75 +1451,79 @@ namespace MultiSql.UserControls.ViewModels
         }
 
         //TODO: Pending task.
-        /////// <summary>
-        ///////     Display the result on separate tabs.
-        /////// </summary>
-        /////// <param name="dbInfo">The database object.</param>
-        /////// <param name="dataSet">The resultant data set whose tables are to be displayed.</param>
-        ////private async Task SendResultToTabs(DbInfo dbInfo, DataSet dataSet)
-        ////{
-        ////    TabMainResults.Visibility = Visibility.Visible;
-        ////    var scrVwrGrid                       = new ScrollViewer();
-        ////    var databaseDataGridResultsGridPanel = new Grid();
-        ////    var totalRows                        = 0;
+        /// <summary>
+        ///     Display the result on separate tabs.
+        /// </summary>
+        /// <param name="dbInfo">The database object.</param>
+        /// <param name="dataSet">The resultant data set whose tables are to be displayed.</param>
+        private async Task SendResultToTabs(DbInfo dbInfo, DataSet dataSet)
+        {
+            ////var scrVwrGrid = new ScrollViewer();
+            ////var databaseDataGridResultsGridPanel = new Grid();
+            var totalRows = 0;
 
-        ////    if (dataSet != null && dataSet.Tables != null && dataSet.Tables.Count > 0)
-        ////    {
-        ////        foreach (DataTable dataTable in dataSet.Tables)
-        ////        {
-        ////            totalRows += dataTable.Rows.Count;
-        ////        }
+            if (dataSet != null && dataSet.Tables != null && dataSet.Tables.Count > 0)
+            {
+                foreach (DataTable dataTable in dataSet.Tables)
+                {
+                    totalRows += dataTable.Rows.Count;
+                }
 
-        ////        if (!(IgnoreEmptyResults && totalRows == 0))
-        ////        {
-        ////            foreach (DataTable dataTable in dataSet.Tables)
-        ////            {
-        ////                if (databaseDataGridResultsGridPanel.RowDefinitions.Count > 0)
-        ////                {
-        ////                    // Add grid splitter between every table.
-        ////                    databaseDataGridResultsGridPanel.RowDefinitions.Add(new RowDefinition {MaxHeight = 10});
-        ////                    var splitter = new GridSplitter {HorizontalAlignment                             = HorizontalAlignment.Stretch, Height = 10};
-        ////                    Grid.SetRow(splitter, databaseDataGridResultsGridPanel.RowDefinitions.Count - 1);
-        ////                    databaseDataGridResultsGridPanel.Children.Add(splitter);
-        ////                }
+                if (!(IgnoreEmptyResults && totalRows == 0))
+                {
+                    TabItems.Add(new DatabaseResultsTabItemViewModel(dbInfo.Database, dataSet));
 
-        ////                // Prevent division by 0 error when calculating percentage of rows for height later.
-        ////                Double percentHeight = dataTable.Rows.Count * 100 / (totalRows == 0 ? 1 : totalRows);
+                    foreach (DataTable dataTable in dataSet.Tables)
+                    {
 
-        ////                // Add row definition and datagrid for the new row definition.
-        ////                databaseDataGridResultsGridPanel.RowDefinitions.Add(new RowDefinition
-        ////                                                                    {
-        ////                                                                        Height = new GridLength(percentHeight, GridUnitType.Star), MinHeight = 10, MaxHeight = 500
-        ////                                                                    });
+                        ////if (databaseDataGridResultsGridPanel.RowDefinitions.Count > 0)
+                        ////{
+                        ////    // Add grid splitter between every table.
+                        ////    databaseDataGridResultsGridPanel.RowDefinitions.Add(new RowDefinition { MaxHeight = 10 });
+                        ////    var splitter = new GridSplitter { HorizontalAlignment = HorizontalAlignment.Stretch, Height = 10 };
+                        ////    Grid.SetRow(splitter, databaseDataGridResultsGridPanel.RowDefinitions.Count - 1);
+                        ////    databaseDataGridResultsGridPanel.Children.Add(splitter);
+                        ////}
 
-        ////                var databaseDataGridResult = new DataGrid
-        ////                                             {
-        ////                                                 CanUserAddRows       = false,
-        ////                                                 CanUserResizeColumns = true,
-        ////                                                 IsReadOnly           = true,
-        ////                                                 MaxHeight            = databaseDataGridResultsGridPanel.RowDefinitions.Last().MaxHeight,
-        ////                                                 RowHeaderWidth       = 20
-        ////                                             };
+                        ////// Prevent division by 0 error when calculating percentage of rows for height later.
+                        ////Double percentHeight = dataTable.Rows.Count * 100 / (totalRows == 0 ? 1 : totalRows);
 
-        ////                databaseDataGridResult.AutoGeneratingColumn += DatabaseDataGridResult_AutoGeneratingColumn;
+                        ////// Add row definition and datagrid for the new row definition.
+                        ////databaseDataGridResultsGridPanel.RowDefinitions.Add(new RowDefinition
+                        ////{
+                        ////    Height = new GridLength(percentHeight, GridUnitType.Star),
+                        ////    MinHeight = 10,
+                        ////    MaxHeight = 500
+                        ////});
 
-        ////                databaseDataGridResult.LoadingRow     += AddRowNumberOn_LoadingRow;
-        ////                databaseDataGridResult.RowHeaderWidth =  20 + dataTable.Rows.Count.ToString().Length * 5;
-        ////                databaseDataGridResult.ItemsSource    =  dataTable.DefaultView;
-        ////                databaseDataGridResult.MouseUp        += DatabaseDataGridResult_MouseUp;
-        ////                Grid.SetRow(databaseDataGridResult, databaseDataGridResultsGridPanel.RowDefinitions.Count - 1);
-        ////                databaseDataGridResultsGridPanel.Children.Add(databaseDataGridResult);
-        ////            }
+                        ////var databaseDataGridResult = new DataGrid
+                        ////{
+                        ////    CanUserAddRows = false,
+                        ////    CanUserResizeColumns = true,
+                        ////    IsReadOnly = true,
+                        ////    MaxHeight = databaseDataGridResultsGridPanel.RowDefinitions.Last().MaxHeight,
+                        ////    RowHeaderWidth = 20
+                        ////};
 
-        ////            // Set the grid as content for the scroll viewer. Set the scroll viewer as content for the tab item.
-        ////            scrVwrGrid.Content = databaseDataGridResultsGridPanel;
-        ////            var newTabPageForDbInfo = new TabItem {Header = dbInfo.Database, Content = scrVwrGrid, Tag = totalRows.ToString()};
-        ////            newTabPageForDbInfo.MouseUp += NewTabPageForDatabase_MouseUp;
+                        ////databaseDataGridResult.AutoGeneratingColumn += DatabaseDataGridResult_AutoGeneratingColumn;
 
-        ////            await Task.Run(() => { Dispatcher.Invoke(() => { TabMainResults.Items.Add(newTabPageForDbInfo); }); });
-        ////        }
-        ////    }
-        ////}
+                        ////databaseDataGridResult.LoadingRow += AddRowNumberOn_LoadingRow;
+                        ////databaseDataGridResult.RowHeaderWidth = 20 + dataTable.Rows.Count.ToString().Length * 5;
+                        ////databaseDataGridResult.ItemsSource = dataTable.DefaultView;
+                        ////databaseDataGridResult.MouseUp += DatabaseDataGridResult_MouseUp;
+                        ////Grid.SetRow(databaseDataGridResult, databaseDataGridResultsGridPanel.RowDefinitions.Count - 1);
+                        ////databaseDataGridResultsGridPanel.Children.Add(databaseDataGridResult);
+                    }
+
+                    // Set the grid as content for the scroll viewer. Set the scroll viewer as content for the tab item.
+                    ////scrVwrGrid.Content = databaseDataGridResultsGridPanel;
+                    ////var newTabPageForDbInfo = new TabItem { Header = dbInfo.Database, Content = scrVwrGrid, Tag = totalRows.ToString() };
+                    ////newTabPageForDbInfo.MouseUp += NewTabPageForDatabase_MouseUp;
+
+                    ////await Task.Run(() => { Dispatcher.Invoke(() => { TabMainResults.Items.Add(newTabPageForDbInfo); }); });
+                }
+            }
+        }
 
         /// <summary>
         ///     Display the result on separate tabs.
@@ -1569,8 +1593,7 @@ namespace MultiSql.UserControls.ViewModels
 
             if (ResultDisplayType == ResultDisplayType.DifferentTabs)
             {
-                // TODO: Pending Task.
-                ////await SendResultToTabs(dbInfo, dataSet);
+                await SendResultToTabs(dbInfo, dataSet);
             }
             else
             {

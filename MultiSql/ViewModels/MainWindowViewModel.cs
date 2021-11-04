@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Data.SqlClient;
 using MultiSql.Common;
 
-namespace MultiSql.UserControls.ViewModels
+namespace MultiSql.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
@@ -42,14 +43,23 @@ namespace MultiSql.UserControls.ViewModels
             {
                 _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Clear();
                 _multiSqlViewModel.DatabaseListViewModel.ConnectionStringBuilder = new SqlConnectionStringBuilder(connectServer.ServerConnectionString);
+                var databaseList = new ObservableCollection<DbInfo>();
 
                 foreach (var database in connectServer.Databases)
                 {
-                    _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Add(new DbInfo(connectServer.ServerName, database));
+                    var dbInfo = new DbInfo(connectServer.ServerName, database);
+                    databaseList.Add(dbInfo);
                 }
+
+                _multiSqlViewModel.DatabaseListViewModel.AllDatabases = databaseList;
             }
 
             SelectedViewModel = _multiSqlViewModel;
+        }
+
+        private void DbInfo_QueryExecutionRequestedChanged(Object sender, EventArgs e)
+        {
+            var t = "test";
         }
 
         private void DatabaseListViewModel_ChangeConnection(Object sender, EventArgs e)

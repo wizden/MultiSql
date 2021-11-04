@@ -6,6 +6,8 @@ namespace MultiSql
     public class DbInfo : INotifyPropertyChanged
     {
 
+        public event EventHandler QueryExecutionRequestedChanged;
+
         #region Private Fields
 
         /// <summary>
@@ -63,6 +65,7 @@ namespace MultiSql
             {
                 queryExecutionRequested = value;
                 NotifyPropertyChanged("QueryExecutionRequested");
+                QueryExecutionRequestedChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 

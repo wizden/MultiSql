@@ -1,13 +1,13 @@
-﻿<UserControl x:Class="MultiSql.UserControls.Views.MultiSqlView"
+﻿<UserControl x:Class="MultiSql.Views.MultiSqlView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:converters="clr-namespace:MultiSql.Converters"
-             xmlns:views="clr-namespace:MultiSql.UserControls.Views"
-             xmlns:vm="clr-namespace:MultiSql.UserControls.ViewModels"
+             xmlns:views="clr-namespace:MultiSql.Views"
+             xmlns:vm="clr-namespace:MultiSql.ViewModels"
              xmlns:settings="clr-namespace:MultiSql.Common"
-             xmlns:local="clr-namespace:MultiSql.UserControls.Views"
+             xmlns:local="clr-namespace:MultiSql.Views"
              mc:Ignorable="d" 
              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
              d:DesignHeight="600" d:DesignWidth="900" Background="White">
@@ -147,7 +147,18 @@
                     <TextBox Name="TxtBlkResults" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
                              FontFamily="Courier New" Height="Auto" FontSize="14" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToVisibilityConverter}}" IsReadOnlyCaretVisible="True" IsReadOnly="True" 
                              AcceptsReturn="True" Text="{Binding ResultsText}" />
-                    <TabControl Name="TabMainResults" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToCollapsedConverter}}" />
+                    <TabControl Name="TabMainResults" ItemsSource="{Binding TabItems}" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToCollapsedConverter}}">
+                        <TabControl.Resources>
+                            <DataTemplate DataType="{x:Type vm:DatabaseResultsTabItemViewModel}">
+                                <views:DatabaseResultsTabItemView />
+                            </DataTemplate>
+                        </TabControl.Resources>
+                        <TabControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:TabItemViewModel}">
+                                <TextBlock Text="{Binding Header}" />
+                            </DataTemplate>
+                        </TabControl.ItemTemplate>
+                    </TabControl>
                 </Grid>
             </Border>
 
