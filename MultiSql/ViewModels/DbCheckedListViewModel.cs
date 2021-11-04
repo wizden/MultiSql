@@ -88,11 +88,21 @@ namespace MultiSql.ViewModels
             set
             {
                 allDatabases                   =  new TrulyObservableCollection<DbInfo>(value);
+
+                foreach (var dbInfo in allDatabases)
+                {
+                    dbInfo.QueryExecutionRequestedChanged += DbInfo_QueryExecutionRequestedChanged;
+                }
+
                 allDatabases.CollectionChanged += AllDatabasesCollectionChanged;
                 RaisePropertyChanged();
-                RaisePropertyChanged("GetDatabasesSelectedCountText");
                 RaisePropertyChanged("ConnectionExists");
             }
+        }
+
+        private void DbInfo_QueryExecutionRequestedChanged(Object sender, EventArgs e)
+        {
+            RaisePropertyChanged("GetDatabasesSelectedCountText");
         }
 
         /// <summary>
@@ -219,34 +229,6 @@ namespace MultiSql.ViewModels
         private void ChangeSQLConnection()
         {
             ChangeConnection?.Invoke(this, EventArgs.Empty);
-
-            ////var cs = new ConnectServer();
-            ////cs.ShowDialog();
-
-            ////////if (cs.DataContext != null && cs.DataContext is ConnectServerViewModel)
-            ////////{
-            ////////    var response = (ConnectServerViewModel) cs.DataContext;
-            ////////    var temp     = response.Databases.Count();
-            ////////}
-
-            ////if (!String.IsNullOrWhiteSpace(cs.ServerConnectionString))
-            ////{
-            ////    if (cs.Databases.Count > 0)
-            ////    {
-            ////        ErrorText = String.Empty;
-            ////        var retVal = new ObservableCollection<DbInfo>();
-            ////        ConnectionStringBuilder = new SqlConnectionStringBuilder(cs.ServerConnectionString);
-            ////        RaisePropertyChanged("ConnectionStringBuilder");
-
-            ////        foreach (var database in cs.Databases)
-            ////        {
-            ////            var dh = new DbInfo(ConnectionStringBuilder.DataSource, database.Replace("_", "__"));
-            ////            retVal.Add(dh);
-            ////        }
-
-            ////        AllDatabases = retVal;
-            ////    }
-            ////}
         }
 
         /// <summary>

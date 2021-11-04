@@ -147,7 +147,18 @@
                     <TextBox Name="TxtBlkResults" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
                              FontFamily="Courier New" Height="Auto" FontSize="14" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToVisibilityConverter}}" IsReadOnlyCaretVisible="True" IsReadOnly="True" 
                              AcceptsReturn="True" Text="{Binding ResultsText}" />
-                    <TabControl Name="TabMainResults" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToCollapsedConverter}}" />
+                    <TabControl Name="TabMainResults" ItemsSource="{Binding TabItems}" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToCollapsedConverter}}">
+                        <TabControl.Resources>
+                            <DataTemplate DataType="{x:Type vm:DatabaseResultsTabItemViewModel}">
+                                <views:DatabaseResultsTabItemView />
+                            </DataTemplate>
+                        </TabControl.Resources>
+                        <TabControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:TabItemViewModel}">
+                                <TextBlock Text="{Binding Header}" />
+                            </DataTemplate>
+                        </TabControl.ItemTemplate>
+                    </TabControl>
                 </Grid>
             </Border>
 
