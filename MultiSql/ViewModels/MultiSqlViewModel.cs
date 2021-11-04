@@ -30,6 +30,12 @@ namespace MultiSql.ViewModels
     public class MultiSqlViewModel : ViewModelBase
     {
 
+        /* TODO:
+        Software updates
+        Populate list of previous connections
+
+        */
+
         #region Public Constructors
 
         /// <summary>
@@ -40,6 +46,7 @@ namespace MultiSql.ViewModels
             DatabaseListViewModel  =  new DbCheckedListViewModel();
             executionTimer         =  new Timer(1000);
             executionTimer.Elapsed += ExecutionTimer_Elapsed;
+            DatabaseListExpanded   =  true;
 
             // TODO: Remove at commit
             ResultDisplayType = ResultDisplayType.Text;
@@ -78,6 +85,11 @@ namespace MultiSql.ViewModels
         ///     Private store for a lock object to prevent multiple threads accessing the same area of code.
         /// </summary>
         private readonly Object lockObject = new();
+
+        /// <summary>
+        ///     Private store to indicate whether the database list is expanded.
+        /// </summary>
+        private Boolean _databaseListExpanded;
 
         /// <summary>
         ///     Private store for the delimiter character.
@@ -278,7 +290,35 @@ namespace MultiSql.ViewModels
             private set => connectionTimeout = value == 0 ? 30 : value;
         }
 
+        /// <summary>
+        ///     Gets the view model for the database list user control.
+        /// </summary>
         public DbCheckedListViewModel DatabaseListViewModel { get; }
+
+        /// <summary>
+        ///     Gets or sets a value indicating whether the database list is expanded.
+        /// </summary>
+        public Boolean DatabaseListExpanded
+        {
+            get => _databaseListExpanded;
+            set
+            {
+                _databaseListExpanded = value;
+                DatabasesTextDisplay  = "Databases" + (value ? String.Empty : $" ({DatabaseListViewModel.GetDatabasesSelectedCountText})");
+                RaisePropertyChanged();
+                RaisePropertyChanged("DatabasesTextDisplay");
+            }
+        }
+
+        /// <summary>
+        ///     Gets or set the text to be displayed for databases count if the control is collapsed.
+        /// </summary>
+        public String DatabasesTextDisplay { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the default selected index.
+        /// </summary>
+        public Int32 DefaultSelectedIndex { get; set; }
 
         /// <summary>
         ///     Gets or set the delimiter character.
@@ -583,17 +623,6 @@ namespace MultiSql.ViewModels
 
         #region Private Methods
 
-        ///     TODO: Pending Task
-        /////// <summary>
-        ///////     Add a row number to the left-most column on the data grid.
-        /////// </summary>
-        /////// <param name="sender">The sender object.</param>
-        /////// <param name="e">The DataGridRowEventArgs object.</param>
-        ////private void AddRowNumberOn_LoadingRow(Object sender, DataGridRowEventArgs e)
-        ////{
-        ////    e.Row.Header = (e.Row.GetIndex() + 1).ToString();
-        ////}
-
         /// <summary>
         ///     Add error information to the errors text box.
         /// </summary>
@@ -672,20 +701,6 @@ namespace MultiSql.ViewModels
 
         // TODO: Pending Task
         /////// <summary>
-        ///////     Ensure correct display of column name for DataGrid - see
-        ///////     http://stackoverflow.com/questions/9403782/first-underscore-in-a-datagridcolumnheader-gets-removed
-        /////// </summary>
-        /////// <param name="sender">The sender data grid object.</param>
-        /////// <param name="e">The DataGridAutoGeneratingColumnEventArgs object.</param>
-        ////private void DatabaseDataGridResult_AutoGeneratingColumn(Object sender, DataGridAutoGeneratingColumnEventArgs e)
-        ////{
-        ////    e.Column.SortMemberPath = e.PropertyName;
-        ////    var dataGridBoundColumn = e.Column as DataGridBoundColumn;
-        ////    dataGridBoundColumn.Binding = new Binding("[" + e.PropertyName + "]");
-        ////    e.Column.Header             = e.Column.Header.ToString().Replace("_", "__");
-        ////}
-
-        /////// <summary>
         ///////     Event fired on mouse-up on any of the result data grid.
         /////// </summary>
         /////// <param name="sender">The sender object.</param>
@@ -697,47 +712,6 @@ namespace MultiSql.ViewModels
         ////        SetProgressText(String.Format("Rows: {0}", ((DataGrid) sender).Items.Count));
         ////        e.Handled = true;
         ////    }
-        ////}
-
-
-        /////// <summary>
-        ///////     Event handler on collapsing the database list expander.
-        /////// </summary>
-        /////// <param name="sender">The expander sender object.</param>
-        /////// <param name="e">The RoutedEventArgs object.</param>
-        ////private void ExpanderDatabaseList_Collapsed(Object sender, RoutedEventArgs e)
-        ////{
-        ////    if (sender is Expander && TxtBlkDatabaseExpander != null)
-        ////    {
-        ////        if (AllDatabases.Where(dh => dh.QueryExecutionRequested).Count() > 0)
-        ////        {
-        ////            TxtBlkDatabaseExpander.Text = "Databases (" + GetDatabasesSelectedCountText + ")";
-        ////        }
-        ////    }
-
-        ////    lastLeftColumnWidth        = ColDefDatabaseList.Width.Value;
-        ////    ColDefDatabaseList.Width   = new GridLength(1, GridUnitType.Auto);
-        ////    ColDefQueryExecution.Width = new GridLength(1, GridUnitType.Star);
-        ////}
-
-        /////// <summary>
-        ///////     Event handler on expanding the database list expander.
-        /////// </summary>
-        /////// <param name="sender">The expander sender object.</param>
-        /////// <param name="e">The RoutedEventArgs object.</param>
-        ////private void ExpanderDatabaseList_Expanded(Object sender, RoutedEventArgs e)
-        ////{
-        ////    if (sender is Expander && TxtBlkDatabaseExpander != null)
-        ////    {
-        ////        TxtBlkDatabaseExpander.Text = "Databases";
-        ////    }
-
-        ////    if (lastLeftColumnWidth > 1)
-        ////    {
-        ////        ColDefDatabaseList.Width = new GridLength(lastLeftColumnWidth, GridUnitType.Pixel);
-        ////    }
-
-        ////    ColDefQueryExecution.Width = new GridLength(1, GridUnitType.Star);
         ////}
 
         /// <summary>
@@ -1032,6 +1006,7 @@ namespace MultiSql.ViewModels
 
                     if (!String.IsNullOrEmpty(QueryAllText))
                     {
+                        //TODO: Find way to remove MessageBox.Show
                         overwriteContents = MessageBox.Show("Overwrite the existing text.",
                                                             "Overwrite text",
                                                             MessageBoxButton.YesNo,
@@ -1271,15 +1246,13 @@ namespace MultiSql.ViewModels
                     await Task.WhenAll(databaseQueries);
                 }
 
+                ProgressText = String.Empty;
                 Logger.Debug("Completed running query on databases.");
 
-                //TODO: Pending task.
-                ////if (((ComboBoxItem) CmbResultDisplayMethod.SelectedItem).Content.ToString() == "Different tabs" && TabMainResults.Items != null && TabMainResults.Items.Count > 0)
-                ////{
-                ////    TabMainResults.SelectedIndex = 0;
-                ////}
-
-                ProgressText = String.Empty;
+                if (ResultDisplayType == ResultDisplayType.DifferentTabs && TabItems.Count > 0)
+                {
+                    RaisePropertyChanged("DefaultSelectedIndex");
+                }
             }
             catch (TaskCanceledException)
             {
@@ -1706,99 +1679,6 @@ namespace MultiSql.ViewModels
         ////        else
         ////        {
         ////            MessageBox.Show("Unable to set connection timeout.", MultiSqlSettings.ApplicationName);
-        ////        }
-        ////    }
-        ////}
-
-        /////// <summary>
-        ///////     Capture key press on form.
-        /////// </summary>
-        /////// <param name="sender">The sender object.</param>
-        /////// <param name="e">The KeyEventArgs object.</param>
-        ////private void Window_PreviewKeyDown(Object sender, KeyEventArgs e)
-        ////{
-        ////    if (e.Key == Key.F5)
-        ////    {
-        ////        if (BtnRunQuery.Command != null && BtnRunQuery.Command.CanExecute(null))
-        ////        {
-        ////            BtnRunQuery.Command.Execute(null);
-        ////        }
-        ////    }
-        ////    else if (e.Key == Key.F6)
-        ////    {
-        ////        if (BtnRunQuery.Command != null && BtnRunQuery.Command.CanExecute(null))
-        ////        {
-        ////            TxtQuery.Focus();
-        ////            var selectionStart = TxtQuery.SelectionStart;
-        ////            var selectionEnd   = TxtQuery.SelectionStart;
-
-        ////            if (selectionStart == TxtQuery.Text.Length)
-        ////            {
-        ////                selectionStart = 0;
-        ////            }
-
-        ////            if (selectionEnd == TxtQuery.Text.Length)
-        ////            {
-        ////                selectionEnd--;
-        ////            }
-
-        ////            var canProcess      = false;
-        ////            var processAttempts = 0;
-
-        ////            while (!canProcess && processAttempts < 3)
-        ////            {
-        ////                while (selectionStart >= 0 && (TxtQuery.Text[selectionStart] != '\r' || selectionStart >= 2 && TxtQuery.Text[selectionStart - 2] != '\r'))
-        ////                {
-        ////                    if (selectionStart == 0)
-        ////                    {
-        ////                        break;
-        ////                    }
-
-        ////                    selectionStart--;
-        ////                }
-
-        ////                selectionStart -= 2;
-
-        ////                if (selectionStart < 0)
-        ////                {
-        ////                    selectionStart = 0;
-        ////                }
-
-        ////                while (selectionEnd + 2 < TxtQuery.Text.Length && (TxtQuery.Text[selectionEnd] != '\r' || TxtQuery.Text[selectionEnd + 2] != '\r'))
-        ////                {
-        ////                    if (selectionEnd == TxtQuery.Text.Length - 1)
-        ////                    {
-        ////                        selectionEnd++;
-        ////                        break;
-        ////                    }
-
-        ////                    selectionEnd++;
-        ////                }
-
-        ////                if (Math.Abs(selectionEnd - TxtQuery.Text.Length) <= 2)
-        ////                {
-        ////                    selectionEnd = TxtQuery.Text.Length;
-        ////                }
-
-        ////                selectionStart += selectionStart > 0 ? 4 : 0;
-        ////                canProcess     =  selectionStart >= 0 && selectionEnd <= TxtQuery.Text.Length && selectionStart < selectionEnd;
-        ////                processAttempts++;
-
-        ////                if (!canProcess && selectionStart > 10)
-        ////                {
-        ////                    selectionStart -= 9;
-        ////                }
-        ////            }
-
-        ////            if (canProcess)
-        ////            {
-        ////                TxtQuery.Select(selectionStart, selectionEnd - selectionStart);
-
-        ////                if (TxtQuery.SelectedText.Replace(Environment.NewLine, String.Empty).Length > 0)
-        ////                {
-        ////                    BtnRunQuery.Command.Execute(null);
-        ////                }
-        ////            }
         ////        }
         ////    }
         ////}
