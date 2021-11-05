@@ -20,7 +20,7 @@ namespace MultiSql.ViewModels
 
         #region Public Fields
 
-        public List<ConnectionInfo> connectionInfos = new();
+        public ObservableCollection<ConnectionInfo> connectionInfos = new();
 
         #endregion Public Fields
 
@@ -34,14 +34,15 @@ namespace MultiSql.ViewModels
         private readonly String                  SqlServerAuth = "SQL Server Authentication";
         private readonly String                  WindowsAuth   = "Windows Authentication";
         private          List<String>            _databases;
+        private          String                  _errors;
         private          List<String>            authenticationTypes;
         private          CancellationTokenSource cancellationTokenSource;
         private          RelayCommand            cmdCancel;
         private          RelayCommand            cmdConnect;
         private          Boolean                 connectionInProgress;
         private          XDocument               connectionListDocument;
-        private          String                  _errors;
         private          String                  selectedAuthenticationType;
+        private          Int16                   _selectedConnectionIndex;
 
         #endregion Private Fields
 
@@ -81,7 +82,7 @@ namespace MultiSql.ViewModels
             get { return cmdConnect ??= new RelayCommand(async execute => await ConnectToDbAsync(), canExecute => !connectionInProgress); }
         }
 
-        public List<ConnectionInfo> ConnectionInfos
+        public ObservableCollection<ConnectionInfo> ConnectionInfos
         {
             get => connectionInfos;
             private set
@@ -90,6 +91,8 @@ namespace MultiSql.ViewModels
                 RaisePropertyChanged();
             }
         }
+
+        public IEnumerable<String> ConnectionServers => ConnectionInfos.Select(ci => ci.ServerName);
 
         public ReadOnlyCollection<String> Databases => _databases?.AsReadOnly();
 
@@ -117,10 +120,31 @@ namespace MultiSql.ViewModels
             }
         }
 
+        public Int16 SelectedConnectionIndex
+        {
+            get => _selectedConnectionIndex;
+            set
+            {
+                _selectedConnectionIndex = value;
+                RaisePropertyChanged();
+
+                if (value >= 0)
+                {
+                    var selectedConnection = ConnectionInfos.First(ci => ci.Id == value);
+                    SelectedAuthenticationType = selectedConnection.IntegratedSecurity
+                                                     ? WindowsAuth
+                                                     : SqlServerAuth;
+                    UserName = selectedConnection.UserName;
+                    RaisePropertyChanged("UserName");
+                }
+            }
+        }
+
         public String ServerConnectionString { get; private set; }
         public String ServerName             { get; set; }
 
         public Boolean SqlAuthenticationRequested => SelectedAuthenticationType == SqlServerAuth;
+
         public String  UserName                   { get; set; }
 
         #endregion Public Properties
@@ -174,7 +198,7 @@ namespace MultiSql.ViewModels
                 }
 
                 // Not awaiting here as it's not critical that the save should occur to block the user from connecting.
-                SaveConnectionToListAsync(connString.DataSource, connString.UserID, connString.IntegratedSecurity);
+                SaveConnectionToListAsync(connString.DataSource, connString.IntegratedSecurity);
                 conn.Close();
                 connectionInProgress   = false;
                 ServerConnectionString = conn.ConnectionString;
@@ -200,17 +224,17 @@ namespace MultiSql.ViewModels
                                {
                                    Logger.Debug("Retrieving connections list file.");
                                    connectionListDocument = XDocument.Parse(File.ReadAllText(MultiSqlSettings.ConnectionsListFile));
-                                   ConnectionInfos        = new List<ConnectionInfo>();
+                                   ConnectionInfos        = new ObservableCollection<ConnectionInfo>();
+                                   Int16 id = 0;
 
-                                   foreach (var conInfo in connectionListDocument.Descendants("Connection"))
+                                   foreach (var conInfo in connectionListDocument.Descendants("Connection").OrderByDescending(d => DateTime.Parse(d.Attribute("LastUsed").Value)))
                                    {
-                                       ConnectionInfos.Add(new ConnectionInfo(conInfo.Attribute("Server").Value,
+                                       ConnectionInfos.Add(new ConnectionInfo(id++,
+                                                                              conInfo.Attribute("Server").Value,
                                                                               Boolean.Parse(conInfo.Attribute("IntegratedSecurity").Value),
                                                                               conInfo.Attribute("UserName").Value,
                                                                               DateTime.Parse(conInfo.Attribute("LastUsed").Value)));
                                    }
-
-                                   ConnectionInfos = ConnectionInfos.OrderByDescending(ci => ci.LastUsedDateTime).ToList();
                                }
                                catch (XmlException xe)
                                {
@@ -224,18 +248,13 @@ namespace MultiSql.ViewModels
                                    connectionListDocument.Save(MultiSqlSettings.ConnectionsListFile);
                                }
                            });
-
-            var lastConnectionInfo = ConnectionInfos.FirstOrDefault() ?? new ConnectionInfo(String.Empty, true, String.Empty, DateTime.Now);
-            ////CmbServerName.Text = lastConnectionInfo.ServerName;
-            ////CmbAuthenticationType.Text = lastConnectionInfo.IntegratedSecurity ? WindowsAuth : SqlServerAuth;
-            ////TxtUserName.Text = lastConnectionInfo.UserName;
         }
 
-        private async Task SaveConnectionToListAsync(String serverName, String userName, Boolean integratedSecurity)
+        private async Task SaveConnectionToListAsync(String serverName, Boolean integratedSecurity)
         {
             await Task.Run(() =>
                            {
-                               Logger.Debug($"Retrieving connection information for Server: {serverName}, Integrated Security: {integratedSecurity}, User: {userName}");
+                               Logger.Debug($"Retrieving connection information for Server: {serverName}, Integrated Security: {integratedSecurity}, User: {UserName}");
                                var conn = connectionListDocument.Descendants("Connection").
                                                                  FirstOrDefault(con =>
                                                                                     String.Compare(con.Attribute("Server")?.Value,
@@ -243,7 +262,7 @@ namespace MultiSql.ViewModels
                                                                                                    StringComparison.CurrentCultureIgnoreCase) ==
                                                                                     0 &&
                                                                                     String.Compare(con.Attribute("UserName")?.Value,
-                                                                                                   userName,
+                                                                                                   UserName,
                                                                                                    StringComparison.CurrentCultureIgnoreCase) ==
                                                                                     0 &&
                                                                                     String.Compare(con.Attribute("IntegratedSecurity")?.Value,
@@ -258,7 +277,7 @@ namespace MultiSql.ViewModels
                                                           FirstOrDefault().
                                                           Add(new XElement("Connection",
                                                                            new XAttribute("Server",             serverName),
-                                                                           new XAttribute("UserName",           userName),
+                                                                           new XAttribute("UserName",           UserName),
                                                                            new XAttribute("IntegratedSecurity", integratedSecurity),
                                                                            new XAttribute("LastUsed",           DateTime.Now.ToString())));
                                }

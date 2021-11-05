@@ -36,7 +36,8 @@
 
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Server" HorizontalAlignment="Right" />
             <ComboBox Grid.Row="0" Grid.Column="1" Name="CmbServerName" HorizontalAlignment="Stretch" 
-                     IsEditable="True" Text="{Binding ServerName}">
+                      ItemsSource="{Binding ConnectionServers}" SelectedIndex="{Binding SelectedConnectionIndex}"
+                      IsEditable="True" Text="{Binding ServerName}">
             </ComboBox>
 
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Authentication" HorizontalAlignment="Right" />
