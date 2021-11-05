@@ -9,6 +9,11 @@ namespace MultiSql.Models
     {
 
         /// <summary>
+        ///     Gets the id sequence of the connection info.
+        /// </summary>
+        public Int16 Id { get; }
+
+        /// <summary>
         ///     Gets or sets the connection server name.
         /// </summary>
         public String ServerName { get; set; }
@@ -28,8 +33,9 @@ namespace MultiSql.Models
         /// </summary>
         public DateTime LastUsedDateTime { get; set; }
 
-        public ConnectionInfo(String serverName, Boolean integratedSecurity, String userName, DateTime lastUsedDateTime)
+        public ConnectionInfo(Int16 id, String serverName, Boolean integratedSecurity, String userName, DateTime lastUsedDateTime)
         {
+            Id                 = id;
             ServerName         = serverName;
             IntegratedSecurity = integratedSecurity;
             UserName           = userName;
