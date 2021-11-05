@@ -33,7 +33,6 @@ namespace MultiSql.ViewModels
 
         /* TODO:
         Software updates
-        Populate list of previous connections
 
         */
 
@@ -50,7 +49,6 @@ namespace MultiSql.ViewModels
             DatabaseListExpanded   =  true;
 
             // TODO: Remove at commit
-            QueryAllText      = "SELECT TOP 5 * FROM	PayResultsMisc" + Environment.NewLine + Environment.NewLine + "SELECT TOP 10 * FROM	PayResultsMisc";
             ResultDisplayType = ResultDisplayType.Text;
         }
 
