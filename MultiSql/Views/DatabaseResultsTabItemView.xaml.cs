@@ -1,17 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MultiSql.Views
 {
@@ -24,5 +13,30 @@ namespace MultiSql.Views
         {
             InitializeComponent();
         }
+
+        /// <summary>
+        ///     Add a row number to the left-most column on the data grid.
+        /// </summary>
+        /// <param name="sender">The sender object.</param>
+        /// <param name="e">The DataGridRowEventArgs object.</param>
+        private void DataGrid_OnLoadingRow(Object? sender, DataGridRowEventArgs e)
+        {
+            e.Row.Header = (e.Row.GetIndex() + 1).ToString();
+        }
+
+        /// <summary>
+        ///     Ensure correct display of column name for DataGrid - see
+        ///     http://stackoverflow.com/questions/9403782/first-underscore-in-a-datagridcolumnheader-gets-removed
+        /// </summary>
+        /// <param name="sender">The sender data grid object.</param>
+        /// <param name="e">The DataGridAutoGeneratingColumnEventArgs object.</param>
+        private void DataGrid_OnAutoGeneratingColumn(Object? sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            e.Column.SortMemberPath = e.PropertyName;
+            var dataGridBoundColumn = e.Column as DataGridBoundColumn;
+            dataGridBoundColumn.Binding = new Binding("[" + e.PropertyName + "]");
+            e.Column.Header             = e.Column.Header.ToString().Replace("_", "__");
+        }
+
     }
 }

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ShowAllFiles>true</ShowAllFiles>
+    <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
   <ItemGroup>
     <ApplicationDefinition Update="App.xaml">
@@ -12,33 +12,9 @@
     <Compile Update="MultiSqlWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\ConnectServerView.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\DatabaseResultsTabItemView.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\DbCheckedListView.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\MultiSqlView.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="MultiSqlWindow.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\ConnectServerView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\DatabaseResultsTabItemView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\DbCheckedListView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\MultiSqlView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

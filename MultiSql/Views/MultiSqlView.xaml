@@ -30,11 +30,11 @@
         </Grid.ColumnDefinitions>
 
         <Expander Name="ExpanderDatabaseList" ExpandDirection="Right" 
-                  IsExpanded="True" >
+                  IsExpanded="{Binding DatabaseListExpanded}" >
             <Expander.Header>
                 <Border Background="LightGray" CornerRadius="2, 7, 7, 2">
                     <WrapPanel>
-                        <TextBlock Name="TxtBlkDatabaseExpander" FontSize="14" Margin="2, 4" Text="Databases">
+                        <TextBlock Name="TxtBlkDatabaseExpander" FontSize="14" Margin="2, 4" Text="{Binding DatabasesTextDisplay}">
                             <TextBlock.LayoutTransform>
                                 <RotateTransform Angle="90"/>
                             </TextBlock.LayoutTransform>
@@ -147,7 +147,8 @@
                     <TextBox Name="TxtBlkResults" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
                              FontFamily="Courier New" Height="Auto" FontSize="14" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToVisibilityConverter}}" IsReadOnlyCaretVisible="True" IsReadOnly="True" 
                              AcceptsReturn="True" Text="{Binding ResultsText}" />
-                    <TabControl Name="TabMainResults" ItemsSource="{Binding TabItems}" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToCollapsedConverter}}">
+                    <TabControl Name="TabMainResults" ItemsSource="{Binding TabItems}" SelectedIndex="{Binding DefaultSelectedIndex, UpdateSourceTrigger=PropertyChanged}"
+                                Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToCollapsedConverter}}">
                         <TabControl.Resources>
                             <DataTemplate DataType="{x:Type vm:DatabaseResultsTabItemViewModel}">
                                 <views:DatabaseResultsTabItemView />
