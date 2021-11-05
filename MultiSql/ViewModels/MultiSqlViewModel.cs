@@ -50,6 +50,7 @@ namespace MultiSql.ViewModels
             DatabaseListExpanded   =  true;
 
             // TODO: Remove at commit
+            QueryAllText      = "SELECT TOP 5 * FROM	PayResultsMisc" + Environment.NewLine + Environment.NewLine + "SELECT TOP 10 * FROM	PayResultsMisc";
             ResultDisplayType = ResultDisplayType.Text;
         }
 
@@ -86,6 +87,11 @@ namespace MultiSql.ViewModels
         ///     Private store for a lock object to prevent multiple threads accessing the same area of code.
         /// </summary>
         private readonly Object lockObject = new();
+
+        /// <summary>
+        ///     Private store for the connection timeout.
+        /// </summary>
+        private Int32 _connectionTimeout = 30;
 
         /// <summary>
         ///     Private store to indicate whether the database list is expanded.
@@ -161,11 +167,6 @@ namespace MultiSql.ViewModels
         ///     Private variable to hold the command object to cancel the running query.
         /// </summary>
         private RelayCommand cancelQueryCommand;
-
-        /// <summary>
-        ///     Private store for the connection timeout.
-        /// </summary>
-        private Int32 connectionTimeout = 30;
 
         /// <summary>
         ///     Private field to get the currently executing command.
@@ -286,9 +287,13 @@ namespace MultiSql.ViewModels
         /// </summary>
         public Int32 ConnectionTimeout
         {
-            get => connectionTimeout;
+            get => _connectionTimeout;
 
-            private set => connectionTimeout = value == 0 ? 30 : value;
+            set
+            {
+                _connectionTimeout = value == 0 ? 30 : value;
+                RaisePropertyChanged();
+            }
         }
 
         /// <summary>
@@ -700,21 +705,6 @@ namespace MultiSql.ViewModels
             QueryExecutionTimeText = DateTime.UtcNow.Subtract(queryExecutionStartDateTime).ToString(@"hh\:mm\:ss");
         }
 
-        // TODO: Pending Task
-        /////// <summary>
-        ///////     Event fired on mouse-up on any of the result data grid.
-        /////// </summary>
-        /////// <param name="sender">The sender object.</param>
-        /////// <param name="e">The MouseButtonEventArgs object.</param>
-        ////private void DatabaseDataGridResult_MouseUp(Object sender, MouseButtonEventArgs e)
-        ////{
-        ////    if (sender is DataGrid && e.ChangedButton == MouseButton.Left)
-        ////    {
-        ////        SetProgressText(String.Format("Rows: {0}", ((DataGrid) sender).Items.Count));
-        ////        e.Handled = true;
-        ////    }
-        ////}
-
         /// <summary>
         ///     Gets the estimated number of rows per query based on statistics.
         /// </summary>
@@ -1035,21 +1025,6 @@ namespace MultiSql.ViewModels
             }
         }
 
-        //TODO: Pending task
-        /////// <summary>
-        ///////     Event fired on mouse-up on any of the tab.
-        /////// </summary>
-        /////// <param name="sender">The sender object.</param>
-        /////// <param name="e">The MouseButtonEventArgs object.</param>
-        ////private void NewTabPageForDatabase_MouseUp(Object sender, MouseButtonEventArgs e)
-        ////{
-        ////    if (sender is TabItem && e.ChangedButton == MouseButton.Left)
-        ////    {
-        ////        var tabItem = (TabItem) sender;
-        ////        SetProgressText(String.Format("Rows: {0}", tabItem.Tag));
-        ////    }
-        ////}
-
         /// <summary>
         ///     Returns a string containing dashes.
         /// </summary>
@@ -1152,6 +1127,7 @@ namespace MultiSql.ViewModels
         {
             DataSet individualQueryResult = null;
             DatabaseListViewModel.ConnectionStringBuilder.InitialCatalog = dbInfo.Database.Replace("__", "_");
+            DatabaseListViewModel.ConnectionStringBuilder.ConnectTimeout = ConnectionTimeout;
 
             using (var con = new SqlConnection(DatabaseListViewModel.ConnectionStringBuilder.ConnectionString))
             {
@@ -1425,7 +1401,6 @@ namespace MultiSql.ViewModels
             }
         }
 
-        //TODO: Pending task.
         /// <summary>
         ///     Display the result on separate tabs.
         /// </summary>
@@ -1454,6 +1429,11 @@ namespace MultiSql.ViewModels
             }
         }
 
+        /// <summary>
+        ///     Set the row count on the display.
+        /// </summary>
+        /// <param name="sender">The parameter is not used.</param>
+        /// <param name="e">Arguments containing the row count for the table.</param>
         private void DatabaseResultsTabItem_ResultTableSelected(Object sender, ResultTableSelectedEventArgs e)
         {
             ProgressText = $"Rows: {e.RowCount}";
@@ -1592,7 +1572,6 @@ namespace MultiSql.ViewModels
                                        ResultsText += textToAdd.Substring(addedLength, textToAdd.Length - addedLength);
 
                                        //TODO: Pending task
-                                       ////TxtBlkResults.Visibility =  Visibility.Visible;
                                        ////TxtBlkResults.ScrollToEnd();
                                    }
                                });
@@ -1601,7 +1580,6 @@ namespace MultiSql.ViewModels
             {
                 //TODO: Pending task
                 ResultsText += textToAdd;
-                ////TxtBlkResults.Visibility =  Visibility.Visible;
                 ////TxtBlkResults.ScrollToEnd();
             }
         }
@@ -1616,33 +1594,6 @@ namespace MultiSql.ViewModels
             var regex = new Regex("[^0-9.-]+"); // Allow only 0-9
             e.Handled = regex.IsMatch(e.Text);
         }
-
-        //TODO: Pending task.
-        /////// <summary>
-        ///////     Sets the connection timeout value.
-        /////// </summary>
-        /////// <param name="sender">The sender object.</param>
-        /////// <param name="e">The RoutedEventArgs object.</param>
-        ////private void TxtConnTimeout_TextChanged(Object sender, TextChangedEventArgs e)
-        ////{
-        ////    var conTimeout = 0;
-
-        ////    if (Int32.TryParse(TxtConnTimeout.Text, out conTimeout))
-        ////    {
-        ////        ConnectionTimeout = conTimeout;
-        ////    }
-        ////    else
-        ////    {
-        ////        if (String.IsNullOrEmpty(TxtConnTimeout.Text))
-        ////        {
-        ////            TxtConnTimeout.Text = "30";
-        ////        }
-        ////        else
-        ////        {
-        ////            MessageBox.Show("Unable to set connection timeout.", MultiSqlSettings.ApplicationName);
-        ////        }
-        ////    }
-        ////}
 
         #endregion Private Methods
 
