@@ -124,7 +124,7 @@
                         <Border Grid.Row="1" Grid.Column="1" BorderThickness="0.8" BorderBrush="Black">
                             <WrapPanel >
                                 <TextBlock Name="TxtBlkConnTimeout" Text="Conn. timeout in seconds (Default 30)" Width="210" />
-                                <TextBox Name="TxtConnTimeout" Width="30" MaxLength="4"  />
+                                <TextBox Name="TxtConnTimeout" Text="{Binding ConnectionTimeout}" Width="30" MaxLength="4"  />
                             </WrapPanel>
                         </Border>
 
