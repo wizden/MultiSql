@@ -1564,21 +1564,15 @@ namespace MultiSql.ViewModels
                                        {
                                            ResultsText += textToAdd.Substring(splitIndex * splitLength, splitLength);
                                            addedLength += splitLength;
-                                           ////await Task.Delay(50); // Brief delay to let other progress bars/counters update and continue working.
                                        }
 
                                        ResultsText += textToAdd.Substring(addedLength, textToAdd.Length - addedLength);
-
-                                       //TODO: Pending task
-                                       ////TxtBlkResults.ScrollToEnd();
                                    }
                                });
             }
             else
             {
-                //TODO: Pending task
                 ResultsText += textToAdd;
-                ////TxtBlkResults.ScrollToEnd();
             }
         }
 

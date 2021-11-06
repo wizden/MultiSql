@@ -145,8 +145,9 @@
             <Border Grid.Row="3" BorderThickness="0.8" BorderBrush="Black">
                 <Grid Name="GrdResults">
                     <TextBox Name="TxtBlkResults" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" 
-                             FontFamily="Courier New" Height="Auto" FontSize="14" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToVisibilityConverter}}" IsReadOnlyCaretVisible="True" IsReadOnly="True" 
-                             AcceptsReturn="True" Text="{Binding ResultsText}" />
+                             FontFamily="Courier New" Height="Auto" FontSize="14" Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToVisibilityConverter}}" 
+                             IsReadOnlyCaretVisible="True" IsReadOnly="True" AcceptsReturn="True" 
+                             Text="{Binding ResultsText}" TextChanged="TxtBlkResults_OnTextChanged" />
                     <TabControl Name="TabMainResults" ItemsSource="{Binding TabItems}" SelectedIndex="{Binding DefaultSelectedIndex, UpdateSourceTrigger=PropertyChanged}"
                                 Visibility="{Binding IsResultsToText, Converter={StaticResource booleanToCollapsedConverter}}">
                         <TabControl.Resources>

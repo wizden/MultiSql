@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System;
+using System.Windows.Controls;
 
 namespace MultiSql.Views
 {
@@ -19,6 +20,11 @@ namespace MultiSql.Views
         }
 
         #endregion Public Constructors
+
+        private void TxtBlkResults_OnTextChanged(Object sender, TextChangedEventArgs e)
+        {
+            TxtBlkResults.ScrollToEnd();
+        }
 
     }
 }
