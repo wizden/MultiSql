@@ -12,9 +12,15 @@
     <Compile Update="MultiSqlWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\ConnectionCheckedTreeView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="MultiSqlWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\ConnectionCheckedTreeView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
