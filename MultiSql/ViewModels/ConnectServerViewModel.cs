@@ -106,7 +106,7 @@ namespace MultiSql.ViewModels
             }
         }
 
-        public SecureString Password { get; set; }
+        public SecureString Password { get; set; } = new();
 
         public String SelectedAuthenticationType
         {
