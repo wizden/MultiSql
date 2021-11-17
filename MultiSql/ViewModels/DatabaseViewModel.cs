@@ -7,6 +7,8 @@ namespace MultiSql.ViewModels
     public class DatabaseViewModel : ViewModelBase
     {
 
+        public event EventHandler QueryExecutionRequestedChanged;
+
         #region Private Fields
 
         private ConnectionInfo _database;
@@ -24,7 +26,7 @@ namespace MultiSql.ViewModels
         public DatabaseViewModel(Int16 id, ServerViewModel server, String databaseName, Boolean integratedSecurity, String userName, DateTime lastUsedDateTime)
         {
             Database     = new ConnectionInfo(id, server.ServerName, integratedSecurity, userName, lastUsedDateTime);
-            DatabaseName = databaseName;
+            DatabaseName = databaseName.Replace("_", "__");
         }
 
         #endregion Public Constructors
@@ -48,6 +50,7 @@ namespace MultiSql.ViewModels
             {
                 _isChecked = value;
                 RaisePropertyChanged();
+                QueryExecutionRequestedChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 

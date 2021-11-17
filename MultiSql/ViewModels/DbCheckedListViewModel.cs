@@ -114,13 +114,8 @@ namespace MultiSql.ViewModels
 
                     foreach (var databaseViewModel in ServerList.SelectMany(sl => sl.Databases))
                     {
+                        databaseViewModel.QueryExecutionRequestedChanged += DbInfo_QueryExecutionRequestedChanged;
                         _allDatabases.Add(databaseViewModel);
-
-                    }
-
-                    foreach (var dbInfo in _allDatabases)
-                    {
-                        ////dbInfo.QueryExecutionRequestedChanged += DbInfo_QueryExecutionRequestedChanged;
                     }
 
                     RaisePropertyChanged();
@@ -295,8 +290,7 @@ namespace MultiSql.ViewModels
             if (item is DatabaseViewModel)
             {
                 var dbObject = (DatabaseViewModel) item;
-                var retVal = dbObject.Database.ServerName.ToUpper().Contains(DatabaseFilterText.ToUpper()) ||
-                             dbObject.DatabaseName.Replace("__", "_").ToUpper().Contains(DatabaseFilterText.ToUpper());
+                var retVal   = dbObject.DatabaseName.Replace("__", "_").ToUpper().Contains(DatabaseFilterText.ToUpper());
                 return retVal;
             }
 
