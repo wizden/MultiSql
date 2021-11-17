@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.ObjectModel;
-using System.Data.SqlClient;
 using MultiSql.Common;
 
 namespace MultiSql.ViewModels
@@ -11,6 +9,7 @@ namespace MultiSql.ViewModels
         private          ViewModelBase          _selectedViewModel;
         private readonly MultiSqlViewModel      _multiSqlViewModel;
         private readonly ConnectServerViewModel _connectServerViewModel;
+        private static   Int16                  id = 0;
 
         public ViewModelBase SelectedViewModel
         {
@@ -41,17 +40,19 @@ namespace MultiSql.ViewModels
 
             if (!String.IsNullOrWhiteSpace(connectServer.ServerConnectionString))
             {
-                _multiSqlViewModel.DatabaseListViewModel.AllDatabases.Clear();
-                _multiSqlViewModel.DatabaseListViewModel.ConnectionStringBuilder = new SqlConnectionStringBuilder(connectServer.ServerConnectionString);
-                var databaseList = new ObservableCollection<DbInfo>();
+                var issues = _multiSqlViewModel.DatabaseListViewModel.AddServer(connectServer);
 
-                foreach (var database in connectServer.Databases)
-                {
-                    var dbInfo = new DbInfo(connectServer.ServerName, database);
-                    databaseList.Add(dbInfo);
-                }
+                ////_multiSqlViewModel.DatabaseListViewModel.AllDatabases.Clear();
+                ////_multiSqlViewModel.DatabaseListViewModel.ConnectionStringBuilder = new SqlConnectionStringBuilder(connectServer.ServerConnectionString);
+                ////var databaseList = new ObservableCollection<DbInfo>();
 
-                _multiSqlViewModel.DatabaseListViewModel.AllDatabases = databaseList;
+                ////foreach (var database in connectServer.Databases)
+                ////{
+                ////    var dbInfo = new DbInfo(connectServer.ServerName, database);
+                ////    databaseList.Add(dbInfo);
+                ////}
+
+                ////_multiSqlViewModel.DatabaseListViewModel.AllDatabases = databaseList;
             }
 
             SelectedViewModel = _multiSqlViewModel;
