@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Data.SqlClient;
 using MultiSql.Common;
 
 namespace MultiSql.ViewModels
@@ -16,17 +17,20 @@ namespace MultiSql.ViewModels
 
         #region Public Constructors
 
-        public ServerViewModel(String serverName, String userName, Boolean integratedSecurity, DateTime lastUsedDateTime)
+        public ServerViewModel(SqlConnectionStringBuilder connectionStringBuilder)
         {
-            Databases          = new ObservableCollection<DatabaseViewModel>();
-            ServerName         = serverName;
-            UserName           = userName;
-            IntegratedSecurity = integratedSecurity;
+            ConnectionStringBuilder = connectionStringBuilder;
+            Databases               = new ObservableCollection<DatabaseViewModel>();
+            ServerName              = ConnectionStringBuilder.DataSource;
+            UserName                = ConnectionStringBuilder.UserID;
+            IntegratedSecurity      = ConnectionStringBuilder.IntegratedSecurity;
         }
 
         #endregion Public Constructors
 
         #region Public Properties
+
+        public readonly SqlConnectionStringBuilder ConnectionStringBuilder;
 
         public ObservableCollection<DatabaseViewModel> Databases
         {

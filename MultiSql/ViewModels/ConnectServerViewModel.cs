@@ -15,7 +15,7 @@ using NLog;
 
 namespace MultiSql.ViewModels
 {
-    internal class ConnectServerViewModel : ViewModelBase
+    public class ConnectServerViewModel : ViewModelBase
     {
 
         #region Public Fields

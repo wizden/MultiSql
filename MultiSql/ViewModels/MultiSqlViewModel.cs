@@ -49,6 +49,7 @@ namespace MultiSql.ViewModels
             DatabaseListExpanded   =  true;
 
             // TODO: Remove at commit
+            QueryAllText      = "SELECT TOP 10 * FROM PAYRESULTSMISC";
             ResultDisplayType = ResultDisplayType.Text;
         }
 
@@ -150,11 +151,6 @@ namespace MultiSql.ViewModels
         ///     Private store for the collection of tab items on running queries when the ResultType is set to "Tabs".
         /// </summary>
         private ObservableCollection<ITabItem> _tabItems;
-
-        /// <summary>
-        ///     Private store for all the databases.
-        /// </summary>
-        private ObservableCollection<DbInfo> allDatabases;
 
         /// <summary>
         ///     Private store for the cancellation token source object.
@@ -270,7 +266,7 @@ namespace MultiSql.ViewModels
         /// <summary>
         ///     Gets a store for all the databases.
         /// </summary>
-        public ObservableCollection<DbInfo> AllDatabases => DatabaseListViewModel.AllDatabases;
+        public ObservableCollection<DatabaseViewModel> AllDatabases => DatabaseListViewModel.AllDatabases;
 
         /// <summary>
         ///     Gets the relay command object to cancel the query.
@@ -389,7 +385,7 @@ namespace MultiSql.ViewModels
             get
             {
                 return AllDatabases != null
-                           ? String.Format("{0} of {1}", AllDatabases.Count(dh => dh.QueryExecutionRequested).ToString(), AllDatabases.Count().ToString())
+                           ? String.Format("{0} of {1}", AllDatabases.Count(dh => dh.IsChecked).ToString(), AllDatabases.Count().ToString())
                            : String.Empty;
             }
         }
@@ -683,7 +679,7 @@ namespace MultiSql.ViewModels
         /// <returns>Boolean indicating whether a query exists to be run.</returns>
         private Boolean CanRunQuery(Object parameter)
         {
-            return !String.IsNullOrEmpty(QueryAllText) && !isQueryRunning && (AllDatabases?.Any(dh => dh.QueryExecutionRequested) ?? false);
+            return !String.IsNullOrEmpty(QueryAllText) && !isQueryRunning && (AllDatabases?.Any(dh => dh.IsChecked) ?? false);
         }
 
         /// <summary>
@@ -949,10 +945,10 @@ namespace MultiSql.ViewModels
             queryExecutionStartDateTime = DateTime.UtcNow;
             executionTimer.Start();
             IsQueryRunning = true;
-            List<DbInfo> databasesToRun = new();
+            List<DatabaseViewModel> databasesToRun = new();
             AddToErrorText(String.Empty);
             queryToExecute               = String.Join(Environment.NewLine, String.Join(Environment.NewLine + Environment.NewLine, QueriesToExecute));
-            databasesToRun               = AllDatabases.Where(dh => dh.QueryExecutionRequested).ToList();
+            databasesToRun               = AllDatabases.Where(dh => dh.IsChecked).ToList();
             SitesToRun                   = databasesToRun.Count;
             isFirstResultRetrieved       = false;
             filePerDatabaseSaveCancelled = false;
@@ -1121,13 +1117,17 @@ namespace MultiSql.ViewModels
         /// </summary>
         /// <param name="dbInfo">The selected database.</param>
         /// <returns>Boolean indicating whether the query ran to completion.</returns>
-        private async Task<Boolean> RunQueryOnDatabase(DbInfo dbInfo)
+        private async Task<Boolean> RunQueryOnDatabase(DatabaseViewModel dbInfo)
         {
             DataSet individualQueryResult = null;
-            DatabaseListViewModel.ConnectionStringBuilder.InitialCatalog = dbInfo.Database.Replace("__", "_");
-            DatabaseListViewModel.ConnectionStringBuilder.ConnectTimeout = ConnectionTimeout;
+            var associatedConnectionStringBuilder = DatabaseListViewModel.ServerList.
+                                                                          FirstOrDefault(svm => svm.Databases.Contains(dbInfo)).
+                                                                          ConnectionStringBuilder;
 
-            using (var con = new SqlConnection(DatabaseListViewModel.ConnectionStringBuilder.ConnectionString))
+            associatedConnectionStringBuilder.InitialCatalog = dbInfo.DatabaseName.Replace("__", "_");
+            associatedConnectionStringBuilder.ConnectTimeout = ConnectionTimeout;
+
+            using (var con = new SqlConnection(associatedConnectionStringBuilder.ConnectionString))
             {
                 try
                 {
@@ -1140,8 +1140,8 @@ namespace MultiSql.ViewModels
                     var errorText = String.Empty;
                     aex.InnerExceptions.ToList().ForEach(ex => errorText += ex.Message);
                     AddToErrorText(String.Format("{0}.{1}\r\n{2}\r\n{3}",
-                                                 dbInfo.Server,
-                                                 dbInfo.Database.Replace("__", "_"),
+                                                 dbInfo.Database.ServerName,
+                                                 dbInfo.DatabaseName.Replace("__", "_"),
                                                  errorText,
                                                  PrintDashes(defaultDashesToShow)));
                 }
@@ -1150,8 +1150,8 @@ namespace MultiSql.ViewModels
                     if (!sqlEx.Message.Contains("Operation cancelled by user."))
                     {
                         AddToErrorText(String.Format("{0}.{1}\r\n{2}\r\n{3}",
-                                                     dbInfo.Server,
-                                                     dbInfo.Database.Replace("__", "_"),
+                                                     dbInfo.Database.ServerName,
+                                                     dbInfo.DatabaseName.Replace("__", "_"),
                                                      sqlEx.Message,
                                                      PrintDashes(defaultDashesToShow)));
                     }
@@ -1181,7 +1181,7 @@ namespace MultiSql.ViewModels
         /// </summary>
         /// <param name="dbInfos">The selected database.</param>
         /// <returns>Task object indicating the completion status.</returns>
-        private async Task RunQueryOnDatabasesAsync(List<DbInfo> dbInfos)
+        private async Task RunQueryOnDatabasesAsync(List<DatabaseViewModel> dbInfos)
         {
             Logger.Debug("Preparing to run query on databases.");
             databaseQueries         = new List<Task>();
@@ -1199,7 +1199,7 @@ namespace MultiSql.ViewModels
                 BindingOperations.EnableCollectionSynchronization(TabItems, lockObject);
             }
 
-            foreach (var dh in dbInfos.OrderBy(dh => dh.Database).ToList())
+            foreach (var dh in dbInfos.OrderBy(dh => dh.Database.ServerName).ThenBy(dh => dh.DatabaseName).ToList())
             {
                 dh.QueryRetryAttempt = 0;
 
@@ -1277,7 +1277,7 @@ namespace MultiSql.ViewModels
         /// </summary>
         /// <param name="results">The result of the query.</param>
         /// <param name="dbInfo">The database object.</param>
-        private async Task SendResultToCombinedFile(List<Result> results, DbInfo dbInfo = null)
+        private async Task SendResultToCombinedFile(List<Result> results, DatabaseViewModel dbInfo = null)
         {
             if (ResultDisplayType == ResultDisplayType.CombinedFile)
             {
@@ -1344,7 +1344,7 @@ namespace MultiSql.ViewModels
         /// </summary>
         /// <param name="results">The result of the query.</param>
         /// <param name="dbInfo">The database object.</param>
-        private async Task SendResultToIndividualFile(List<Result> results, DbInfo dbInfo = null)
+        private async Task SendResultToIndividualFile(List<Result> results, DatabaseViewModel dbInfo = null)
         {
             if (ResultDisplayType == ResultDisplayType.DatabaseFileName)
             {
@@ -1393,7 +1393,7 @@ namespace MultiSql.ViewModels
 
                     lock (lockObject)
                     {
-                        File.WriteAllText(Path.Combine(fileSaveLocation, dbInfo.Database.Replace("__", "_") + ".txt"), fileContent.ToString());
+                        File.WriteAllText(Path.Combine(fileSaveLocation, dbInfo.DatabaseName.Replace("__", "_") + ".txt"), fileContent.ToString());
                     }
                 }
             }
@@ -1404,7 +1404,7 @@ namespace MultiSql.ViewModels
         /// </summary>
         /// <param name="dbInfo">The database object.</param>
         /// <param name="dataSet">The resultant data set whose tables are to be displayed.</param>
-        private async Task SendResultToTabs(DbInfo dbInfo, DataSet dataSet)
+        private async Task SendResultToTabs(DatabaseViewModel dbInfo, DataSet dataSet)
         {
             var totalRows = 0;
 
@@ -1419,7 +1419,7 @@ namespace MultiSql.ViewModels
 
                                    if (!(IgnoreEmptyResults && totalRows == 0))
                                    {
-                                       var databaseResultsTabItem = new DatabaseResultsTabItemViewModel(dbInfo.Database, dataSet);
+                                       var databaseResultsTabItem = new DatabaseResultsTabItemViewModel(dbInfo.DatabaseName, dataSet);
                                        databaseResultsTabItem.ResultTableSelected += DatabaseResultsTabItem_ResultTableSelected;
                                        TabItems.Add(databaseResultsTabItem);
                                    }
@@ -1443,19 +1443,19 @@ namespace MultiSql.ViewModels
         /// <param name="results">The result of the query.</param>
         /// <param name="dbInfo">The database object.</param>
         /// <param name="hideHeaders">Hide connection header information.</param>
-        private async Task SendResultToText(List<Result> results, DbInfo dbInfo, Boolean hideHeaders = false)
+        private async Task SendResultToText(List<Result> results, DatabaseViewModel dbInfo, Boolean hideHeaders = false)
         {
             var resultsTextSb = new StringBuilder();
             var textToAdd     = String.Empty;
 
             if (!hideHeaders)
             {
-                resultsTextSb.AppendLine(dbInfo.Database.Replace("__", "_") +
-                                         "\t"                               +
-                                         " ("                               +
-                                         dbInfo.Server                      +
-                                         ")"                                +
-                                         Environment.NewLine                +
+                resultsTextSb.AppendLine(dbInfo.DatabaseName.Replace("__", "_") +
+                                         "\t"                                   +
+                                         " ("                                   +
+                                         dbInfo.Database.ServerName             +
+                                         ")"                                    +
+                                         Environment.NewLine                    +
                                          PrintDashes(defaultDashesToShow));
             }
 
@@ -1498,10 +1498,10 @@ namespace MultiSql.ViewModels
         /// <param name="dbInfo">The database info object.</param>
         /// <param name="dataSet">The resultant data set whose tables are to be displayed.</param>
         /// <returns>Returns a task to await the sending of the results to display.</returns>
-        private async Task SendToDisplay(DbInfo dbInfo, DataSet dataSet)
+        private async Task SendToDisplay(DatabaseViewModel dbInfo, DataSet dataSet)
         {
             SiteCounter++;
-            Logger.Debug($"Setting result for {dbInfo.Server} / {dbInfo.Database}.");
+            Logger.Debug($"Setting result for {dbInfo.Database.ServerName} / {dbInfo.DatabaseName}.");
 
             if (ResultDisplayType == ResultDisplayType.DifferentTabs)
             {
@@ -1538,7 +1538,7 @@ namespace MultiSql.ViewModels
 
             if (DeselectOnQueryCompletion)
             {
-                dbInfo.QueryExecutionRequested = false;
+                dbInfo.IsChecked = false;
             }
         }
 

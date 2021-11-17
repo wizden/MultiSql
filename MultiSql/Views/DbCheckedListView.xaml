@@ -38,7 +38,22 @@
                        HorizontalAlignment="Right"/>
         </Grid>
 
-        <ListView Grid.Row="1" Name="LstViewDatabases" HorizontalAlignment="Stretch" ItemsSource="{Binding AllDatabases}">
+        <TreeView Grid.Row="1" ItemsSource="{Binding ServerList}">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:ServerViewModel}"
+                                          ItemsSource="{Binding Databases}">
+                    <CheckBox Content="{Binding ServerName}"
+                              IsChecked="{Binding IsChecked}"/>
+                </HierarchicalDataTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:DatabaseViewModel}"
+                                          ItemsSource="{Binding Database}">
+                    <CheckBox Content="{Binding DatabaseName}"
+                              IsChecked="{Binding IsChecked}"></CheckBox>
+                </HierarchicalDataTemplate>
+            </TreeView.Resources>
+        </TreeView>
+
+        <!--<ListView Grid.Row="1" Name="LstViewDatabases" HorizontalAlignment="Stretch" ItemsSource="{Binding AllDatabases}">
             <ListView.Resources>
                 <Style TargetType="GridViewColumnHeader">
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -64,7 +79,7 @@
                     </GridViewColumn>
                 </GridView>
             </ListView.View>
-        </ListView>
+        </ListView>-->
 
         <Grid  Grid.Row="2">
             <Grid.RowDefinitions>

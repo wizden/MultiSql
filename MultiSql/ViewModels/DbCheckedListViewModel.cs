@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -22,6 +21,8 @@ namespace MultiSql.ViewModels
     {
 
         public event EventHandler ChangeConnection;
+
+        public static Int16 id;
 
         #region Private Fields
 
@@ -48,7 +49,7 @@ namespace MultiSql.ViewModels
         /// <summary>
         ///     Private store for the list of databases.
         /// </summary>
-        private TrulyObservableCollection<DbInfo> allDatabases = new();
+        private TrulyObservableCollection<DatabaseViewModel> _allDatabases = new();
 
         /// <summary>
         ///     Private store for the error text.
@@ -65,6 +66,11 @@ namespace MultiSql.ViewModels
         /// </summary>
         private Boolean selectAllDatabases;
 
+        /// <summary>
+        ///     Private store for the list of server view models.
+        /// </summary>
+        private TrulyObservableCollection<ServerViewModel> _serverList = new();
+        
         #endregion Private Fields
 
         #region Public Constructors
@@ -78,31 +84,51 @@ namespace MultiSql.ViewModels
 
         #region Public Properties
 
-        /// <summary>
-        ///     Gets or sets the list of databases for the checked list control.
-        /// </summary>
-        public ObservableCollection<DbInfo> AllDatabases
+        public ObservableCollection<ServerViewModel> ServerList
         {
-            get => allDatabases;
+            get => _serverList;
 
-            set
+            private set
             {
-                allDatabases                   =  new TrulyObservableCollection<DbInfo>(value);
-
-                foreach (var dbInfo in allDatabases)
+                foreach (var serverViewModel in value)
                 {
-                    dbInfo.QueryExecutionRequestedChanged += DbInfo_QueryExecutionRequestedChanged;
+                    _serverList.Add(serverViewModel);
                 }
 
-                allDatabases.CollectionChanged += AllDatabasesCollectionChanged;
                 RaisePropertyChanged();
+                RaisePropertyChanged("AllDatabases");
                 RaisePropertyChanged("ConnectionExists");
             }
         }
 
-        private void DbInfo_QueryExecutionRequestedChanged(Object sender, EventArgs e)
+        /// <summary>
+        ///     Gets the list of databases for the checked list control.
+        /// </summary>
+        public ObservableCollection<DatabaseViewModel> AllDatabases
         {
-            RaisePropertyChanged("GetDatabasesSelectedCountText");
+            get
+            {
+                if (_allDatabases == null || _allDatabases.Count != ServerList.SelectMany(sl => sl.Databases).Count())
+                {
+                    _allDatabases = new TrulyObservableCollection<DatabaseViewModel>();
+
+                    foreach (var databaseViewModel in ServerList.SelectMany(sl => sl.Databases))
+                    {
+                        _allDatabases.Add(databaseViewModel);
+
+                    }
+
+                    foreach (var dbInfo in _allDatabases)
+                    {
+                        ////dbInfo.QueryExecutionRequestedChanged += DbInfo_QueryExecutionRequestedChanged;
+                    }
+
+                    RaisePropertyChanged();
+                    RaisePropertyChanged("ConnectionExists");
+                }
+
+                return _allDatabases;
+            }
         }
 
         /// <summary>
@@ -126,7 +152,7 @@ namespace MultiSql.ViewModels
         /// </summary>
         public RelayCommand CmdSaveList
         {
-            get { return _cmdSaveList ??= new RelayCommand(async execute => await SaveList(), canExecute => AllDatabases?.Any(db => db.QueryExecutionRequested) ?? false); }
+            get { return _cmdSaveList ??= new RelayCommand(async execute => await SaveList(), canExecute => AllDatabases?.Any(db => db.IsChecked) ?? false); }
         }
 
         public Boolean ConnectionExists => AllDatabases?.Count > 0;
@@ -169,7 +195,7 @@ namespace MultiSql.ViewModels
         /// </summary>
         public String GetDatabasesSelectedCountText
         {
-            get { return String.Format("Selected {0} of {1}", AllDatabases.Where(dh => dh.QueryExecutionRequested).Count().ToString(), AllDatabases.Count().ToString()); }
+            get { return String.Format("Selected {0} of {1}", AllDatabases.Where(dh => dh.IsChecked).Count().ToString(), AllDatabases.Count().ToString()); }
         }
 
         /// <summary>
@@ -196,9 +222,10 @@ namespace MultiSql.ViewModels
             set
             {
                 selectAllDatabases = value;
-                AllDatabases.Where(dh => dh.Database.ToUpper().Contains(DatabaseFilterText.ToUpper()) || dh.Server.ToUpper().Contains(DatabaseFilterText.ToUpper())).
-                             ToList().
-                             ForEach(dh => dh.QueryExecutionRequested = value);
+                AllDatabases.
+                    Where(dh => dh.DatabaseName.ToUpper().Contains(DatabaseFilterText.ToUpper()) || dh.Database.ServerName.ToUpper().Contains(DatabaseFilterText.ToUpper())).
+                    ToList().
+                    ForEach(dh => dh.IsChecked = value);
                 RaisePropertyChanged("GetDatabasesSelectedCountText");
                 RaisePropertyChanged();
             }
@@ -206,22 +233,44 @@ namespace MultiSql.ViewModels
 
         #endregion Public Properties
 
-        #region Private Methods
-
-        /// <summary>
-        ///     Handler fired when any item in a collection changes.
-        /// </summary>
-        /// <param name="sender">The sender object.</param>
-        /// <param name="e">The NotifyCollectionChangedEventArgs object.</param>
-        private void AllDatabasesCollectionChanged(Object sender, NotifyCollectionChangedEventArgs e)
+        public String AddServer(ConnectServerViewModel connectServer)
         {
-            RaisePropertyChanged("GetDatabasesSelectedCountText");
+            var retVal = String.Empty;
 
-            if (AllDatabases.Where(dh => dh.QueryExecutionRequested).Count() == 0 && SelectAllDatabases)
+            try
             {
-                SelectAllDatabases = false;
+                if (ServerList.Any(svm => svm.ServerName         == connectServer.ServerName                 &&
+                                          svm.IntegratedSecurity != connectServer.SqlAuthenticationRequested &&
+                                          svm.UserName           == connectServer.UserName))
+                {
+                    retVal = "Server already connected with those credentials.";
+                    return retVal;
+                }
+
+                var serverViewModel = new ServerViewModel(new SqlConnectionStringBuilder(connectServer.ServerConnectionString));
+
+                foreach (var database in connectServer.Databases)
+                {
+                    serverViewModel.Databases.Add(new DatabaseViewModel(id++,
+                                                                        serverViewModel,
+                                                                        database,
+                                                                        !connectServer.SqlAuthenticationRequested,
+                                                                        connectServer.UserName,
+                                                                        DateTime.Now));
+                }
+
+                ServerList.Add(serverViewModel);
+                RaisePropertyChanged("ServerList");
             }
+            catch (Exception e)
+            {
+                retVal = e.Message;
+            }
+
+            return retVal;
         }
+
+        #region Private Methods
 
         /// <summary>
         ///     Change the connection for the control.
@@ -243,13 +292,20 @@ namespace MultiSql.ViewModels
                 return true;
             }
 
-            if (item is DbInfo)
+            if (item is DatabaseViewModel)
             {
-                var dbObject = (DbInfo) item;
-                return dbObject.Server.ToUpper().Contains(DatabaseFilterText.ToUpper()) || dbObject.Database.Replace("__", "_").ToUpper().Contains(DatabaseFilterText.ToUpper());
+                var dbObject = (DatabaseViewModel) item;
+                var retVal = dbObject.Database.ServerName.ToUpper().Contains(DatabaseFilterText.ToUpper()) ||
+                             dbObject.DatabaseName.Replace("__", "_").ToUpper().Contains(DatabaseFilterText.ToUpper());
+                return retVal;
             }
 
             return false;
+        }
+
+        private void DbInfo_QueryExecutionRequestedChanged(Object sender, EventArgs e)
+        {
+            RaisePropertyChanged("GetDatabasesSelectedCountText");
         }
 
         /// <summary>
@@ -297,8 +353,8 @@ namespace MultiSql.ViewModels
                                                                                  {
                                                                                      try
                                                                                      {
-                                                                                         AllDatabases.First(db => db.Database.ToUpper() == databaseName).
-                                                                                                      QueryExecutionRequested = !SelectAllDatabases;
+                                                                                         AllDatabases.First(db => db.DatabaseName.ToUpper() == databaseName).
+                                                                                                      IsChecked = !SelectAllDatabases;
                                                                                      }
                                                                                      catch (InvalidOperationException ioe)
                                                                                      {
@@ -340,7 +396,7 @@ namespace MultiSql.ViewModels
                                                                              try
                                                                              {
                                                                                  var dbList = String.Join(Environment.NewLine,
-                                                                                                          AllDatabases.Where(db => db.QueryExecutionRequested).
+                                                                                                          AllDatabases.Where(db => db.IsChecked).
                                                                                                                        Select(db => db.Database));
 
                                                                                  File.WriteAllText(sfd.FileName, dbList);

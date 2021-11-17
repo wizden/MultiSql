@@ -17,21 +17,12 @@ namespace MultiSql.Views
     public partial class DbCheckedListView : UserControl
     {
 
-        #region Private Fields
-
-        /// <summary>
-        ///     Private store for the list of databases.
-        /// </summary>
-        private ObservableCollection<DbInfo> allDatabases;
-
-        #endregion Private Fields
-
         #region Public Properties
 
         /// <summary>
         ///     Gets or sets the collection of databases to be assigned to the control.
         /// </summary>
-        public ObservableCollection<DbInfo> AllDatabases => (DataContext as DbCheckedListViewModel).AllDatabases;
+        public ObservableCollection<DatabaseViewModel> AllDatabases => (DataContext as DbCheckedListViewModel).AllDatabases;
 
         /// <summary>
         ///     Gets the connection string builder for the server connection.
@@ -62,7 +53,10 @@ namespace MultiSql.Views
         ///     The static dependency property for the database list object.
         /// </summary>
         public static readonly DependencyProperty DatabaseCheckedListProperty =
-            DependencyProperty.Register("DatabaseCheckedList", typeof(List<DbInfo>), typeof(DbCheckedListView), new PropertyMetadata(default(DbInfo), OnDatabaseListChanged));
+            DependencyProperty.Register("DatabaseCheckedList",
+                                        typeof(List<DatabaseViewModel>),
+                                        typeof(DbCheckedListView),
+                                        new PropertyMetadata(default(DatabaseViewModel), OnDatabaseListChanged));
 
         #endregion Public Fields
 
@@ -97,11 +91,11 @@ namespace MultiSql.Views
         {
             if (sender is MenuItem && ((MenuItem) sender).Parent is ContextMenu && ((ContextMenu) ((MenuItem) sender).Parent).PlacementTarget is ContentControl)
             {
-                if (((ContentControl) ((ContextMenu) ((MenuItem) sender).Parent).PlacementTarget).Content is DbInfo)
+                if (((ContentControl) ((ContextMenu) ((MenuItem) sender).Parent).PlacementTarget).Content is DatabaseViewModel)
                 {
-                    var databaseInfo  = ((ContentControl) ((ContextMenu) ((MenuItem) sender).Parent).PlacementTarget).Content as DbInfo;
+                    var databaseInfo  = ((ContentControl) ((ContextMenu) ((MenuItem) sender).Parent).PlacementTarget).Content as DatabaseViewModel;
                     var mgmtStudioExe = @"C:\Program Files (x86)\Microsoft SQL Server Management Studio 18\Common7\IDE\Ssms.exe";
-                    var args          = String.Format("-S {0} -d {1} -E", databaseInfo.Server, databaseInfo.Database);
+                    var args          = String.Format("-S {0} -d {1} -E", databaseInfo.Database.ServerName, databaseInfo.DatabaseName);
                     var ssmsProcess   = new Process();
                     ssmsProcess.StartInfo = new ProcessStartInfo(mgmtStudioExe, args);
                     ssmsProcess.Start();
