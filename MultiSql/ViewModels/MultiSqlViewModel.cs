@@ -49,7 +49,6 @@ namespace MultiSql.ViewModels
             DatabaseListExpanded   =  true;
 
             // TODO: Remove at commit
-            QueryAllText      = "SELECT TOP 10 * FROM PAYRESULTSMISC";
             ResultDisplayType = ResultDisplayType.Text;
         }
 
