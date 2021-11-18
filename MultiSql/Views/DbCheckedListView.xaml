@@ -42,9 +42,16 @@
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:ServerViewModel}"
                                           ItemsSource="{Binding Databases}">
-                    <CheckBox Content="{Binding ServerName}"
-                              IsChecked="{Binding IsChecked}"
-                              ToolTip="{Binding Description}"/>
+                    <StackPanel>
+                        <StackPanel.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Disconnect" />
+                            </ContextMenu>
+                        </StackPanel.ContextMenu>
+                        <CheckBox Content="{Binding ServerName}"
+                                  IsChecked="{Binding IsChecked}"
+                                  ToolTip="{Binding Description}"/>
+                    </StackPanel>
                 </HierarchicalDataTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:DatabaseViewModel}"
                                           ItemsSource="{Binding Database}">
