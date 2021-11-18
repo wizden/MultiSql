@@ -35,6 +35,7 @@ namespace MultiSql.ViewModels
         private readonly String                  WindowsAuth   = "Windows Authentication";
         private          List<String>            _databases;
         private          String                  _errors;
+        private          Int16                   _selectedConnectionIndex;
         private          List<String>            authenticationTypes;
         private          CancellationTokenSource cancellationTokenSource;
         private          RelayCommand            cmdCancel;
@@ -42,7 +43,6 @@ namespace MultiSql.ViewModels
         private          Boolean                 connectionInProgress;
         private          XDocument               connectionListDocument;
         private          String                  selectedAuthenticationType;
-        private          Int16                   _selectedConnectionIndex;
 
         #endregion Private Fields
 
@@ -81,6 +81,10 @@ namespace MultiSql.ViewModels
         {
             get { return cmdConnect ??= new RelayCommand(async execute => await ConnectToDbAsync(), canExecute => !connectionInProgress); }
         }
+
+        public Boolean ConnectionCancelled { get; private set; }
+
+        public SqlCredential ConnectionCredential { get; private set; }
 
         public ObservableCollection<ConnectionInfo> ConnectionInfos
         {
@@ -145,7 +149,7 @@ namespace MultiSql.ViewModels
 
         public Boolean SqlAuthenticationRequested => SelectedAuthenticationType == SqlServerAuth;
 
-        public String  UserName                   { get; set; }
+        public String UserName { get; set; }
 
         #endregion Public Properties
 
@@ -156,6 +160,7 @@ namespace MultiSql.ViewModels
             Logger.Debug("Cancelling the connection window.");
             cancellationTokenSource.Cancel();
             connectionInProgress = false;
+            ConnectionCancelled  = true;
             ConnectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -163,27 +168,27 @@ namespace MultiSql.ViewModels
         {
             connectionInProgress    = true;
             Errors                  = String.Empty;
+            ConnectionCancelled     = false;
             _databases              = new List<String>();
             cancellationTokenSource = new CancellationTokenSource();
             var connString = new SqlConnectionStringBuilder();
             connString.DataSource               = ServerName;
             connString.IntegratedSecurity       = !SqlAuthenticationRequested;
             connString.MultipleActiveResultSets = true;
-            SqlCredential credential = null;
 
             if (SqlAuthenticationRequested)
             {
                 Password.MakeReadOnly();
-                credential = new SqlCredential(UserName, Password);
+                ConnectionCredential = new SqlCredential(UserName, Password);
+                Password             = new SecureString();
             }
 
             try
             {
-                Logger.Debug($"Attempting connection. Server: {ServerName}, Integrated Security: {connString.IntegratedSecurity}, User: {UserName}.");
-
+                Logger.Debug($"Attempting connection. Server: {ServerName}, Integrated Security: {connString.IntegratedSecurity}, User: {ConnectionCredential?.UserId ?? String.Empty}.");
                 using var conn = new SqlConnection(connString.ConnectionString);
                 using var cmd  = new SqlCommand(getDbListQuery, conn);
-                conn.Credential = credential;
+                conn.Credential = ConnectionCredential;
                 await conn.OpenAsync(cancellationTokenSource.Token);
                 using var sdr = await cmd.ExecuteReaderAsync(cancellationTokenSource.Token);
 
@@ -197,12 +202,15 @@ namespace MultiSql.ViewModels
                     }
                 }
 
-                // Not awaiting here as it's not critical that the save should occur to block the user from connecting.
-                SaveConnectionToListAsync(connString.DataSource, connString.IntegratedSecurity);
+
                 conn.Close();
                 connectionInProgress   = false;
-                ServerConnectionString = conn.ConnectionString;
+                UserName               = ConnectionCredential?.UserId ?? String.Empty;
+                ServerConnectionString = connString.ConnectionString;
                 ConnectionChanged?.Invoke(this, EventArgs.Empty);
+
+                // Not awaiting here as it's not critical that the save should occur to block the user from connecting.
+                SaveConnectionToListAsync(connString.DataSource, connString.IntegratedSecurity);
             }
             catch (Exception exception)
             {
@@ -215,6 +223,14 @@ namespace MultiSql.ViewModels
             }
         }
 
+        private void CreateConnectionDocument()
+        {
+            Logger.Debug($"No connections file found. Creating new file in {MultiSqlSettings.ConnectionsListFile}.");
+            var root = new XElement("Connections", new XElement[] {null});
+            connectionListDocument = XDocument.Parse(root.ToString(), LoadOptions.None);
+            connectionListDocument.Save(MultiSqlSettings.ConnectionsListFile);
+        }
+
         private async Task LoadConnectionsAsync()
         {
             await Task.Run(() =>
@@ -223,11 +239,27 @@ namespace MultiSql.ViewModels
                                try
                                {
                                    Logger.Debug("Retrieving connections list file.");
-                                   connectionListDocument = XDocument.Parse(File.ReadAllText(MultiSqlSettings.ConnectionsListFile));
+
+                                   if (!File.Exists(MultiSqlSettings.ConnectionsListFile))
+                                   {
+                                       CreateConnectionDocument();
+                                       return;
+                                   }
+
+                                   var connectionContent = File.ReadAllText(MultiSqlSettings.ConnectionsListFile);
+
+                                   if (String.IsNullOrWhiteSpace(connectionContent))
+                                   {
+                                       CreateConnectionDocument();
+                                       return;
+                                   }
+
+                                   connectionListDocument = XDocument.Parse(connectionContent);
                                    ConnectionInfos        = new ObservableCollection<ConnectionInfo>();
                                    Int16 id = 0;
 
-                                   foreach (var conInfo in connectionListDocument.Descendants("Connection").OrderByDescending(d => DateTime.Parse(d.Attribute("LastUsed").Value)))
+                                   foreach (var conInfo in connectionListDocument.Descendants("Connection").
+                                                                                  OrderByDescending(d => DateTime.Parse(d.Attribute("LastUsed").Value)))
                                    {
                                        ConnectionInfos.Add(new ConnectionInfo(id++,
                                                                               conInfo.Attribute("Server").Value,
@@ -242,10 +274,7 @@ namespace MultiSql.ViewModels
                                }
                                catch (FileNotFoundException ffe)
                                {
-                                   Logger.Debug($"No connections file found. Creating new file in {MultiSqlSettings.ConnectionsListFile}.");
-                                   var root = new XElement("Connections", new XElement[] {null});
-                                   connectionListDocument = XDocument.Parse(root.ToString(), LoadOptions.None);
-                                   connectionListDocument.Save(MultiSqlSettings.ConnectionsListFile);
+                                   CreateConnectionDocument();
                                }
                            });
         }
@@ -254,7 +283,9 @@ namespace MultiSql.ViewModels
         {
             await Task.Run(() =>
                            {
+                               ConnectionCredential = null;
                                Logger.Debug($"Retrieving connection information for Server: {serverName}, Integrated Security: {integratedSecurity}, User: {UserName}");
+
                                var conn = connectionListDocument.Descendants("Connection").
                                                                  FirstOrDefault(con =>
                                                                                     String.Compare(con.Attribute("Server")?.Value,
@@ -277,7 +308,7 @@ namespace MultiSql.ViewModels
                                                           FirstOrDefault().
                                                           Add(new XElement("Connection",
                                                                            new XAttribute("Server",             serverName),
-                                                                           new XAttribute("UserName",           UserName),
+                                                                           new XAttribute("UserName",           UserName ?? String.Empty),
                                                                            new XAttribute("IntegratedSecurity", integratedSecurity),
                                                                            new XAttribute("LastUsed",           DateTime.Now.ToString())));
                                }

@@ -23,9 +23,10 @@ namespace MultiSql.ViewModels
             }
         }
 
-        public DatabaseResultsTabItemViewModel(String header, DataSet dataSet) : base(header)
+        public DatabaseResultsTabItemViewModel(DatabaseViewModel databaseViewModel, DataSet dataSet) : base(databaseViewModel.DatabaseName)
         {
             ResultsData = new ObservableCollection<DataTable>();
+            Description = databaseViewModel.Database.ServerName;
 
             foreach (DataTable dataTable in dataSet.Tables)
             {

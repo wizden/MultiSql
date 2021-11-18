@@ -11,5 +11,7 @@ namespace MultiSql.ViewModels
 
         public String Header { get; set; }
 
+        public String Description { get; set; }
+
     }
 }

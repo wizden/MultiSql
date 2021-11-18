@@ -43,12 +43,14 @@
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:ServerViewModel}"
                                           ItemsSource="{Binding Databases}">
                     <CheckBox Content="{Binding ServerName}"
-                              IsChecked="{Binding IsChecked}"/>
+                              IsChecked="{Binding IsChecked}"
+                              ToolTip="{Binding Description}"/>
                 </HierarchicalDataTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:DatabaseViewModel}"
                                           ItemsSource="{Binding Database}">
                     <CheckBox Content="{Binding DatabaseName}"
-                              IsChecked="{Binding IsChecked}"></CheckBox>
+                              IsChecked="{Binding IsChecked}"
+                              ToolTip="{Binding Description}"/>
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
         </TreeView>

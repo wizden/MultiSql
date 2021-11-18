@@ -49,6 +49,7 @@ namespace MultiSql.ViewModels
             DatabaseListExpanded   =  true;
 
             // TODO: Remove at commit
+            QueryAllText      = "SELECT TOP 10 * FROM PAYRESULTSMISC";
             ResultDisplayType = ResultDisplayType.Text;
         }
 
@@ -1119,14 +1120,15 @@ namespace MultiSql.ViewModels
         private async Task<Boolean> RunQueryOnDatabase(DatabaseViewModel dbInfo)
         {
             DataSet individualQueryResult = null;
-            var associatedConnectionStringBuilder = DatabaseListViewModel.ServerList.
-                                                                          FirstOrDefault(svm => svm.Databases.Contains(dbInfo)).
-                                                                          ConnectionStringBuilder;
+            var associatedServer = DatabaseListViewModel.ServerList.
+                                                         FirstOrDefault(svm => svm.Databases.Contains(dbInfo));
 
-            associatedConnectionStringBuilder.InitialCatalog = dbInfo.DatabaseName.Replace("__", "_");
-            associatedConnectionStringBuilder.ConnectTimeout = ConnectionTimeout;
+            associatedServer.ConnectionStringBuilder.InitialCatalog = dbInfo.DatabaseName.Replace("__", "_");
+            associatedServer.ConnectionStringBuilder.ConnectTimeout = ConnectionTimeout;
 
-            using (var con = new SqlConnection(associatedConnectionStringBuilder.ConnectionString))
+            using (var con = associatedServer.ConnectionCredential == null
+                                 ? new SqlConnection(associatedServer.ConnectionStringBuilder.ConnectionString)
+                                 : new SqlConnection(associatedServer.ConnectionStringBuilder.ConnectionString, associatedServer.ConnectionCredential))
             {
                 try
                 {
@@ -1418,7 +1420,7 @@ namespace MultiSql.ViewModels
 
                                    if (!(IgnoreEmptyResults && totalRows == 0))
                                    {
-                                       var databaseResultsTabItem = new DatabaseResultsTabItemViewModel(dbInfo.DatabaseName, dataSet);
+                                       var databaseResultsTabItem = new DatabaseResultsTabItemViewModel(dbInfo, dataSet);
                                        databaseResultsTabItem.ResultTableSelected += DatabaseResultsTabItem_ResultTableSelected;
                                        TabItems.Add(databaseResultsTabItem);
                                    }

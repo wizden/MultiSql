@@ -234,6 +234,11 @@ namespace MultiSql.ViewModels
 
             try
             {
+                if (connectServer.ConnectionCancelled)
+                {
+                    return retVal;
+                }
+
                 if (ServerList.Any(svm => svm.ServerName         == connectServer.ServerName                 &&
                                           svm.IntegratedSecurity != connectServer.SqlAuthenticationRequested &&
                                           svm.UserName           == connectServer.UserName))
@@ -242,7 +247,7 @@ namespace MultiSql.ViewModels
                     return retVal;
                 }
 
-                var serverViewModel = new ServerViewModel(new SqlConnectionStringBuilder(connectServer.ServerConnectionString));
+                var serverViewModel = new ServerViewModel(new SqlConnectionStringBuilder(connectServer.ServerConnectionString), connectServer.ConnectionCredential);
 
                 foreach (var database in connectServer.Databases)
                 {

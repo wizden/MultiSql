@@ -64,6 +64,8 @@ namespace MultiSql.ViewModels
             }
         }
 
+        public String Description => $"Server: {Database.ServerName}";
+
         /// <summary>
         ///     Gets or sets the number of times the query on the database was attempted.
         /// </summary>

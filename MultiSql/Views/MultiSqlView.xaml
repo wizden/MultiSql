@@ -157,7 +157,8 @@
                         </TabControl.Resources>
                         <TabControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:TabItemViewModel}">
-                                <TextBlock Text="{Binding Header}" />
+                                <TextBlock Text="{Binding Header}"
+                                           ToolTip="{Binding Description}"/>
                             </DataTemplate>
                         </TabControl.ItemTemplate>
                     </TabControl>
