@@ -172,6 +172,7 @@ namespace MultiSql.ViewModels
             _databases              = new List<String>();
             cancellationTokenSource = new CancellationTokenSource();
             var connString = new SqlConnectionStringBuilder();
+            connString.ApplicationName          = MultiSqlSettings.ApplicationName;
             connString.DataSource               = ServerName;
             connString.IntegratedSecurity       = !SqlAuthenticationRequested;
             connString.MultipleActiveResultSets = true;

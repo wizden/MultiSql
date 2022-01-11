@@ -20,11 +20,24 @@ namespace MultiSql.ViewModels
     public class DbCheckedListViewModel : ViewModelBase
     {
 
-        public event EventHandler ChangeConnection;
+        #region Public Fields
 
         public static Int16 id;
 
+        #endregion Public Fields
+
+        #region Public Events
+
+        public event EventHandler ChangeConnection;
+
+        #endregion Public Events
+
         #region Private Fields
+
+        /// <summary>
+        ///     Private store for the list of databases.
+        /// </summary>
+        private TrulyObservableCollection<DatabaseViewModel> _allDatabases = new();
 
         /// <summary>
         ///     Private store for the command to change the server connection.
@@ -37,6 +50,11 @@ namespace MultiSql.ViewModels
         private RelayCommand _cmdLoadList;
 
         /// <summary>
+        ///     Private store for the command to open management studio for the connection.
+        /// </summary>
+        private RelayCommand _cmdOpenMgmtStudio;
+
+        /// <summary>
         ///     Private store for the command to save the database list.
         /// </summary>
         private RelayCommand _cmdSaveList;
@@ -47,9 +65,9 @@ namespace MultiSql.ViewModels
         private String _databaseFilterText = String.Empty;
 
         /// <summary>
-        ///     Private store for the list of databases.
+        ///     Private store for the list of server view models.
         /// </summary>
-        private TrulyObservableCollection<DatabaseViewModel> _allDatabases = new();
+        private readonly TrulyObservableCollection<ServerViewModel> _serverList = new();
 
         /// <summary>
         ///     Private store for the error text.
@@ -66,40 +84,13 @@ namespace MultiSql.ViewModels
         /// </summary>
         private Boolean selectAllDatabases;
 
-        /// <summary>
-        ///     Private store for the list of server view models.
-        /// </summary>
-        private TrulyObservableCollection<ServerViewModel> _serverList = new();
-        
         #endregion Private Fields
 
         #region Public Constructors
 
-        /// <summary>
-        ///     Initialises a new instance of the <see cref="DbCheckedListViewModel" /> class.
-        /// </summary>
-        public DbCheckedListViewModel() { }
-
         #endregion Public Constructors
 
         #region Public Properties
-
-        public ObservableCollection<ServerViewModel> ServerList
-        {
-            get => _serverList;
-
-            private set
-            {
-                foreach (var serverViewModel in value)
-                {
-                    _serverList.Add(serverViewModel);
-                }
-
-                RaisePropertyChanged();
-                RaisePropertyChanged("AllDatabases");
-                RaisePropertyChanged("ConnectionExists");
-            }
-        }
 
         /// <summary>
         ///     Gets the list of databases for the checked list control.
@@ -140,6 +131,14 @@ namespace MultiSql.ViewModels
         public RelayCommand CmdLoadList
         {
             get { return _cmdLoadList ??= new RelayCommand(async execute => await LoadList(), canExecute => AllDatabases?.Count > 0); }
+        }
+
+        /// <summary>
+        ///     Command to open management studio for the server connection.
+        /// </summary>
+        public RelayCommand CmdOpenMgmtStudio
+        {
+            get { return _cmdOpenMgmtStudio ??= new RelayCommand(execute => OpenManagementStudio(), canExecute => true); }
         }
 
         /// <summary>
@@ -226,7 +225,26 @@ namespace MultiSql.ViewModels
             }
         }
 
+        public ObservableCollection<ServerViewModel> ServerList
+        {
+            get => _serverList;
+
+            private set
+            {
+                foreach (var serverViewModel in value)
+                {
+                    _serverList.Add(serverViewModel);
+                }
+
+                RaisePropertyChanged();
+                RaisePropertyChanged("AllDatabases");
+                RaisePropertyChanged("ConnectionExists");
+            }
+        }
+
         #endregion Public Properties
+
+        #region Public Methods
 
         public String AddServer(ConnectServerViewModel connectServer)
         {
@@ -248,6 +266,7 @@ namespace MultiSql.ViewModels
                 }
 
                 var serverViewModel = new ServerViewModel(new SqlConnectionStringBuilder(connectServer.ServerConnectionString), connectServer.ConnectionCredential);
+                serverViewModel.Disconnect += ServerViewModel_Disconnect;
 
                 foreach (var database in connectServer.Databases)
                 {
@@ -269,6 +288,16 @@ namespace MultiSql.ViewModels
 
             return retVal;
         }
+
+        private void ServerViewModel_Disconnect(Object sender, EventArgs e)
+        {
+            if (sender is ServerViewModel)
+            {
+                ServerList.Remove((ServerViewModel)sender);
+            }
+        }
+
+        #endregion Public Methods
 
         #region Private Methods
 
@@ -378,6 +407,23 @@ namespace MultiSql.ViewModels
 
 
         }
+
+        private void OpenManagementStudio()
+        {
+            ////if (sender is MenuItem && ((MenuItem)sender).Parent is ContextMenu && ((ContextMenu)((MenuItem)sender).Parent).PlacementTarget is ContentControl)
+            ////{
+            ////    if (((ContentControl)((ContextMenu)((MenuItem)sender).Parent).PlacementTarget).Content is DatabaseViewModel)
+            ////    {
+            ////        var databaseInfo = ((ContentControl)((ContextMenu)((MenuItem)sender).Parent).PlacementTarget).Content as DatabaseViewModel;
+            ////        var mgmtStudioExe = @"C:\Program Files (x86)\Microsoft SQL Server Management Studio 18\Common7\IDE\Ssms.exe";
+            ////        var args = String.Format("-S {0} -d {1} -E", databaseInfo.Database.ServerName, databaseInfo.DatabaseName);
+            ////        var ssmsProcess = new Process();
+            ////        ssmsProcess.StartInfo = new ProcessStartInfo(mgmtStudioExe, args);
+            ////        ssmsProcess.Start();
+            ////    }
+            ////}
+        }
+
 
         private async Task SaveList()
         {

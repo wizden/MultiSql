@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using MultiSql.Common;
 
 namespace MultiSql.ViewModels
@@ -12,8 +13,12 @@ namespace MultiSql.ViewModels
 
         private ObservableCollection<DatabaseViewModel> _databases;
         private Boolean                                 _isChecked;
+        private RelayCommand                            _cmdConnectToSsms;
+        private RelayCommand                            _cmdDisconnect;
 
         #endregion Private Fields
+
+        public event EventHandler Disconnect;
 
         #region Public Constructors
 
@@ -68,6 +73,34 @@ namespace MultiSql.ViewModels
         public String ServerName { get; }
 
         public String UserName { get; }
+
+        /// <summary>
+        ///     Command to connect to Management Studio.
+        /// </summary>
+        public RelayCommand CmdConnectToSsms
+        {
+            get { return _cmdConnectToSsms ??= new RelayCommand(execute => ConnectToSsms(), canExecute => true); }
+        }
+
+        /// <summary>
+        ///     Command to connect to Management Studio.
+        /// </summary>
+        public RelayCommand CmdDisconnect
+        {
+            get { return _cmdDisconnect ??= new RelayCommand(execute => DisconnectServer(), canExecute => true); }
+        }
+
+        private void DisconnectServer()
+        {
+            Disconnect?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void ConnectToSsms()
+        {
+            // TODO: Determine a better way to set the path based on versions of SSMS.
+            var ssmsPath = @"C:\Program Files (x86)\Microsoft SQL Server Management Studio 18\Common7\IDE\ssms.exe";
+            Process.Start(new ProcessStartInfo(ssmsPath, $"-S {ServerName}"));
+        }
 
         #endregion Public Properties
 

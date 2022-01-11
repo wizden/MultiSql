@@ -45,7 +45,8 @@
                     <StackPanel>
                         <StackPanel.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Disconnect" />
+                                <MenuItem Header="Open in Management Studio" Command="{Binding CmdConnectToSsms}" />
+                                <MenuItem Header="Disconnect" Command="{Binding CmdDisconnect}" />
                             </ContextMenu>
                         </StackPanel.ContextMenu>
                         <CheckBox Content="{Binding ServerName}"

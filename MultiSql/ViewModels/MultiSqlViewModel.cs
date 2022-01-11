@@ -31,12 +31,9 @@ namespace MultiSql.ViewModels
     public class MultiSqlViewModel : ViewModelBase
     {
 
-        /* TODO:
-        Software updates
+        #region Public
 
-        */
-
-        #region Public Constructors
+        #region Constructor
 
         /// <summary>
         ///     Initialises a new instance of the <see cref="MultiSqlViewModel" /> class.
@@ -47,220 +44,12 @@ namespace MultiSql.ViewModels
             executionTimer         =  new Timer(1000);
             executionTimer.Elapsed += ExecutionTimer_Elapsed;
             DatabaseListExpanded   =  true;
-
-            // TODO: Remove at commit
-            ResultDisplayType = ResultDisplayType.Text;
+            ResultDisplayType      =  ResultDisplayType.Text;
         }
 
-        #endregion Public Constructors
+        #endregion
 
-        #region Private Fields
-
-        /// <summary>
-        ///     Private store for the Logger object.
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-        /// <summary>
-        ///     Private store for the base path of the application.
-        /// </summary>
-        private readonly String appBaseDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.FullName + "\\";
-
-        /// <summary>
-        ///     Private store for the number of dashes to show by default between results.
-        /// </summary>
-        private readonly Int32 defaultDashesToShow = 50;
-
-        /// <summary>
-        ///     Private store for the path to the file containing the editor content.
-        /// </summary>
-        private readonly String editorContentFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EditorContent.txt");
-
-        /// <summary>
-        ///     The timer to measure query execution time.
-        /// </summary>
-        private readonly Timer executionTimer;
-
-        /// <summary>
-        ///     Private store for a lock object to prevent multiple threads accessing the same area of code.
-        /// </summary>
-        private readonly Object lockObject = new();
-
-        /// <summary>
-        ///     Private store for the connection timeout.
-        /// </summary>
-        private Int32 _connectionTimeout = 30;
-
-        /// <summary>
-        ///     Private store to indicate whether the database list is expanded.
-        /// </summary>
-        private Boolean _databaseListExpanded;
-
-        /// <summary>
-        ///     Private store for the delimiter character.
-        /// </summary>
-        private String _delimiterCharacter = String.Empty;
-
-        /// <summary>
-        ///     Private store to indicate whether the database is no longer marked for query selection after execution.
-        /// </summary>
-        private Boolean _deselectOnQueryCompletion;
-
-        /// <summary>
-        ///     Private store for the errors in the query or execution.
-        /// </summary>
-        private String _errors;
-
-        /// <summary>
-        ///     Private store to indicate whether empty results are ignored.
-        /// </summary>
-        private Boolean _ignoreEmptyResults;
-
-        /// <summary>
-        ///     Private store indicating whether the results are displayed to a textbox.
-        /// </summary>
-        private Boolean _isResultsToText;
-
-        /// <summary>
-        ///     Private store for the execution progress text.
-        /// </summary>
-        private String _progressText = String.Empty;
-
-        /// <summary>
-        ///     Private store for the content of the editor queries.
-        /// </summary>
-        private String _queryAllText;
-
-        /// <summary>
-        ///     Private store for the time taken to execute the query.
-        /// </summary>
-        private String _queryExecutionTimeText;
-
-        /// <summary>
-        ///     Private store for the content of the query execution results.
-        /// </summary>
-        private String _resultsText;
-
-        /// <summary>
-        ///     Private store to indicate whether the execution should happen sequentially through the list.
-        /// </summary>
-        private Boolean _runInSequence;
-
-        /// <summary>
-        ///     Private store for the collection of tab items on running queries when the ResultType is set to "Tabs".
-        /// </summary>
-        private ObservableCollection<ITabItem> _tabItems;
-
-        /// <summary>
-        ///     Private store for the cancellation token source object.
-        /// </summary>
-        private CancellationTokenSource cancellationTokenSource;
-
-        /// <summary>
-        ///     Private variable to hold the command object to cancel the running query.
-        /// </summary>
-        private RelayCommand cancelQueryCommand;
-
-        /// <summary>
-        ///     Private field to get the currently executing command.
-        /// </summary>
-        private SqlCommand currentlyExecutingCommand;
-
-        /// <summary>
-        ///     Private store for the set of schemas for validating database list.
-        /// </summary>
-        private XmlSchemaSet databaseListSchemas = new();
-
-        /// <summary>
-        ///     Private store for the list of tasks to be run for each database.
-        /// </summary>
-        private List<Task> databaseQueries;
-
-        /// <summary>
-        ///     Private store to hold a value if the save operation has been cancelled.
-        /// </summary>
-        private Boolean filePerDatabaseSaveCancelled;
-
-        /// <summary>
-        ///     Private store for the save location of "Files Per Database".
-        /// </summary>
-        private String fileSaveLocation = String.Empty;
-
-        /// <summary>
-        ///     Boolean to indicate whether the queries returning no data are to be displayed.
-        /// </summary>
-        private Boolean ignoreEmptyResults;
-
-        /// <summary>
-        ///     Boolean to indicate whether the databases retrieval is in progress.
-        /// </summary>
-        private Boolean isDatabaseRetrievalInProgress;
-
-        /// <summary>
-        ///     Boolean to indicate whether the current result is the first result.
-        /// </summary>
-        private Boolean isFirstResultRetrieved;
-
-        /// <summary>
-        ///     Private store to determine if the query is running.
-        /// </summary>
-        private Boolean isQueryRunning;
-
-        /// <summary>
-        ///     Private store to retain the width of the left column.
-        /// </summary>
-        private Double lastLeftColumnWidth;
-
-        /// <summary>
-        ///     Private variable to hold the command object to load a SQL query from a file.
-        /// </summary>
-        private RelayCommand loadQueryCommand;
-
-        /// <summary>
-        ///     Private store for the last saved location of filesPerDatabase.
-        /// </summary>
-        private String previousFileSaveLocation = String.Empty;
-
-        /// <summary>
-        ///     Private store for the list of queries to be executed.
-        /// </summary>
-        private List<String> queriesToExecute = new();
-
-        /// <summary>
-        ///     Date time object to determine query execution time.
-        /// </summary>
-        private DateTime queryExecutionStartDateTime;
-
-        /// <summary>
-        ///     The query to be executed by the request.
-        /// </summary>
-        private String queryToExecute = String.Empty;
-
-        /// <summary>
-        ///     Private variable to hold the command object to run the query.
-        /// </summary>
-        private RelayCommand runQueryCommand;
-
-        /// <summary>
-        ///     Private variable to hold the command object to save a SQL query to a file.
-        /// </summary>
-        private RelayCommand saveQueryCommand;
-
-        /// <summary>
-        ///     Private variable to keep track of site count.
-        /// </summary>
-        private Int32 siteCounter;
-
-        /// <summary>
-        ///     Private variable to keep track of the number of sites where the query is to be executed.
-        /// </summary>
-        private Int32 sitesToRun;
-
-        #endregion Private Fields
-
-        #region Public Properties
-
-        private ResultDisplayType _resultDisplayType;
+        #region Property
 
         /// <summary>
         ///     Gets a store for all the databases.
@@ -290,11 +79,6 @@ namespace MultiSql.ViewModels
         }
 
         /// <summary>
-        ///     Gets the view model for the database list user control.
-        /// </summary>
-        public DbCheckedListViewModel DatabaseListViewModel { get; }
-
-        /// <summary>
         ///     Gets or sets a value indicating whether the database list is expanded.
         /// </summary>
         public Boolean DatabaseListExpanded
@@ -308,6 +92,11 @@ namespace MultiSql.ViewModels
                 RaisePropertyChanged("DatabasesTextDisplay");
             }
         }
+
+        /// <summary>
+        ///     Gets the view model for the database list user control.
+        /// </summary>
+        public DbCheckedListViewModel DatabaseListViewModel { get; }
 
         /// <summary>
         ///     Gets or set the text to be displayed for databases count if the control is collapsed.
@@ -618,9 +407,219 @@ namespace MultiSql.ViewModels
             }
         }
 
-        #endregion Public Properties
+        #endregion
 
-        #region Private Methods
+        #endregion
+
+        #region Private
+
+        #region Field
+
+        /// <summary>
+        ///     Private store for the connection timeout.
+        /// </summary>
+        private Int32 _connectionTimeout = 30;
+
+        /// <summary>
+        ///     Private store to indicate whether the database list is expanded.
+        /// </summary>
+        private Boolean _databaseListExpanded;
+
+        /// <summary>
+        ///     Private store for the delimiter character.
+        /// </summary>
+        private String _delimiterCharacter = String.Empty;
+
+        /// <summary>
+        ///     Private store to indicate whether the database is no longer marked for query selection after execution.
+        /// </summary>
+        private Boolean _deselectOnQueryCompletion;
+
+        /// <summary>
+        ///     Private store for the errors in the query or execution.
+        /// </summary>
+        private String _errors;
+
+        /// <summary>
+        ///     Private store to indicate whether empty results are ignored.
+        /// </summary>
+        private Boolean _ignoreEmptyResults;
+
+        /// <summary>
+        ///     Private store indicating whether the results are displayed to a textbox.
+        /// </summary>
+        private Boolean _isResultsToText;
+
+        /// <summary>
+        ///     Private store for the execution progress text.
+        /// </summary>
+        private String _progressText = String.Empty;
+
+        /// <summary>
+        ///     Private store for the content of the editor queries.
+        /// </summary>
+        private String _queryAllText;
+
+        /// <summary>
+        ///     Private store for the time taken to execute the query.
+        /// </summary>
+        private String _queryExecutionTimeText;
+
+        private ResultDisplayType _resultDisplayType;
+
+        /// <summary>
+        ///     Private store for the content of the query execution results.
+        /// </summary>
+        private String _resultsText;
+
+        /// <summary>
+        ///     Private store to indicate whether the execution should happen sequentially through the list.
+        /// </summary>
+        private Boolean _runInSequence;
+
+        /// <summary>
+        ///     Private store for the collection of tab items on running queries when the ResultType is set to "Tabs".
+        /// </summary>
+        private ObservableCollection<ITabItem> _tabItems;
+
+        /// <summary>
+        ///     Private store for the base path of the application.
+        /// </summary>
+        private readonly String appBaseDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.FullName + "\\";
+
+        /// <summary>
+        ///     Private store for the cancellation token source object.
+        /// </summary>
+        private CancellationTokenSource cancellationTokenSource;
+
+        /// <summary>
+        ///     Private variable to hold the command object to cancel the running query.
+        /// </summary>
+        private RelayCommand cancelQueryCommand;
+
+        /// <summary>
+        ///     Private field to get the currently executing command.
+        /// </summary>
+        private SqlCommand currentlyExecutingCommand;
+
+        /// <summary>
+        ///     Private store for the set of schemas for validating database list.
+        /// </summary>
+        private XmlSchemaSet databaseListSchemas = new();
+
+        /// <summary>
+        ///     Private store for the list of tasks to be run for each database.
+        /// </summary>
+        private List<Task> databaseQueries;
+
+        /// <summary>
+        ///     Private store for the number of dashes to show by default between results.
+        /// </summary>
+        private readonly Int32 defaultDashesToShow = 50;
+
+        /// <summary>
+        ///     Private store for the path to the file containing the editor content.
+        /// </summary>
+        private readonly String editorContentFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EditorContent.txt");
+
+        /// <summary>
+        ///     The timer to measure query execution time.
+        /// </summary>
+        private readonly Timer executionTimer;
+
+        /// <summary>
+        ///     Private store to hold a value if the save operation has been cancelled.
+        /// </summary>
+        private Boolean filePerDatabaseSaveCancelled;
+
+        /// <summary>
+        ///     Private store for the save location of "Files Per Database".
+        /// </summary>
+        private String fileSaveLocation = String.Empty;
+
+        /// <summary>
+        ///     Boolean to indicate whether the queries returning no data are to be displayed.
+        /// </summary>
+        private Boolean ignoreEmptyResults;
+
+        /// <summary>
+        ///     Boolean to indicate whether the databases retrieval is in progress.
+        /// </summary>
+        private Boolean isDatabaseRetrievalInProgress;
+
+        /// <summary>
+        ///     Boolean to indicate whether the current result is the first result.
+        /// </summary>
+        private Boolean isFirstResultRetrieved;
+
+        /// <summary>
+        ///     Private store to determine if the query is running.
+        /// </summary>
+        private Boolean isQueryRunning;
+
+        /// <summary>
+        ///     Private store to retain the width of the left column.
+        /// </summary>
+        private Double lastLeftColumnWidth;
+
+        /// <summary>
+        ///     Private variable to hold the command object to load a SQL query from a file.
+        /// </summary>
+        private RelayCommand loadQueryCommand;
+
+        /// <summary>
+        ///     Private store for a lock object to prevent multiple threads accessing the same area of code.
+        /// </summary>
+        private readonly Object lockObject = new();
+
+        /// <summary>
+        ///     Private store for the Logger object.
+        /// </summary>
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        /// <summary>
+        ///     Private store for the last saved location of filesPerDatabase.
+        /// </summary>
+        private String previousFileSaveLocation = String.Empty;
+
+        /// <summary>
+        ///     Private store for the list of queries to be executed.
+        /// </summary>
+        private List<String> queriesToExecute = new();
+
+        /// <summary>
+        ///     Date time object to determine query execution time.
+        /// </summary>
+        private DateTime queryExecutionStartDateTime;
+
+        /// <summary>
+        ///     The query to be executed by the request.
+        /// </summary>
+        private String queryToExecute = String.Empty;
+
+        /// <summary>
+        ///     Private variable to hold the command object to run the query.
+        /// </summary>
+        private RelayCommand runQueryCommand;
+
+        /// <summary>
+        ///     Private variable to hold the command object to save a SQL query to a file.
+        /// </summary>
+        private RelayCommand saveQueryCommand;
+
+        /// <summary>
+        ///     Private variable to keep track of site count.
+        /// </summary>
+        private Int32 siteCounter;
+
+        /// <summary>
+        ///     Private variable to keep track of the number of sites where the query is to be executed.
+        /// </summary>
+        private Int32 sitesToRun;
+
+        #endregion
+
+        #region Method
 
         /// <summary>
         ///     Add error information to the errors text box.
@@ -687,6 +686,16 @@ namespace MultiSql.ViewModels
         /// <param name="parameter">The parameter object.</param>
         /// <returns>Boolean indicating whether a query can be saved.</returns>
         private Boolean CanSaveQuery(Object parameter) => !String.IsNullOrEmpty(QueryAllText) && !isQueryRunning;
+
+        /// <summary>
+        ///     Set the row count on the display.
+        /// </summary>
+        /// <param name="sender">The parameter is not used.</param>
+        /// <param name="e">Arguments containing the row count for the table.</param>
+        private void DatabaseResultsTabItem_ResultTableSelected(Object sender, ResultTableSelectedEventArgs e)
+        {
+            ProgressText = $"Rows: {e.RowCount}";
+        }
 
         /// <summary>
         ///     Show execution time for query.
@@ -1428,16 +1437,6 @@ namespace MultiSql.ViewModels
         }
 
         /// <summary>
-        ///     Set the row count on the display.
-        /// </summary>
-        /// <param name="sender">The parameter is not used.</param>
-        /// <param name="e">Arguments containing the row count for the table.</param>
-        private void DatabaseResultsTabItem_ResultTableSelected(Object sender, ResultTableSelectedEventArgs e)
-        {
-            ProgressText = $"Rows: {e.RowCount}";
-        }
-
-        /// <summary>
         ///     Display the result on separate tabs.
         /// </summary>
         /// <param name="results">The result of the query.</param>
@@ -1587,7 +1586,14 @@ namespace MultiSql.ViewModels
             e.Handled = regex.IsMatch(e.Text);
         }
 
-        #endregion Private Methods
+        #endregion
+
+        #endregion
+
+        /* TODO:
+        Software updates
+
+        */
 
     }
 }
