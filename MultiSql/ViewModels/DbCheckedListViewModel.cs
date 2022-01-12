@@ -124,7 +124,7 @@ namespace MultiSql.ViewModels
         /// </summary>
         public RelayCommand CmdLoadList
         {
-            get { return _cmdLoadList ??= new RelayCommand(async execute => await LoadList(), canExecute => AllDatabases?.Count > 0); }
+            get { return _cmdLoadList ??= new RelayCommand(async execute => await LoadList(), canExecute => ServerList.Any()); }
         }
 
         /// <summary>
@@ -132,10 +132,13 @@ namespace MultiSql.ViewModels
         /// </summary>
         public RelayCommand CmdSaveList
         {
-            get { return _cmdSaveList ??= new RelayCommand(async execute => await SaveList(), canExecute => AllDatabases?.Any(db => db.IsChecked) ?? false); }
+            get { return _cmdSaveList ??= new RelayCommand(async execute => await SaveList(), canExecute => ServerList.Any(sl => sl.Databases.Any(db => db.IsChecked))); }
         }
 
-        public Boolean ConnectionExists => AllDatabases?.Count > 0;
+        /// <summary>
+        ///     Boolean indicating whether any server connections exist.
+        /// </summary>
+        public Boolean ConnectionExists => ServerList.Any();
 
         /// <summary>
         ///     Gets the connection string builder for the server connection.
@@ -179,7 +182,12 @@ namespace MultiSql.ViewModels
         /// </summary>
         public String GetDatabasesSelectedCountText
         {
-            get { return String.Format("Selected {0} of {1}", AllDatabases.Where(dh => dh.IsChecked).Count().ToString(), AllDatabases.Count().ToString()); }
+            get
+            {
+                var selected = ServerList.Sum(sl => sl.Databases.Count(db => db.IsChecked));
+                var all      = ServerList.Sum(sl => sl.Databases.Count());
+                return $"Selected {selected} of {all}";
+            }
         }
 
         /// <summary>
@@ -207,12 +215,14 @@ namespace MultiSql.ViewModels
             {
                 selectAllDatabases = value;
 
-                foreach (var server in ServerList) { }
+                foreach (var server in ServerList)
+                {
+                    foreach (DatabaseViewModel dbViewModel in server.DatabasesView)
+                    {
+                        dbViewModel.IsChecked = value;
+                    }
+                }
 
-                AllDatabases.
-                    Where(dh => dh.DatabaseName.ToUpper().Contains(DatabaseFilterText.ToUpper()) || dh.Database.ServerName.ToUpper().Contains(DatabaseFilterText.ToUpper())).
-                    ToList().
-                    ForEach(dh => dh.IsChecked = value);
                 RaisePropertyChanged("GetDatabasesSelectedCountText");
                 RaisePropertyChanged();
             }
