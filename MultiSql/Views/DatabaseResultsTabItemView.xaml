@@ -8,7 +8,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" Background="White">
     <Grid>
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Name="ScrlViewerOuter"
+                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <Grid>
                 <ItemsControl Grid.Row="0" ItemsSource="{Binding ResultsData}">
                     <ItemsControl.ItemTemplate>
@@ -19,13 +20,11 @@
                                     <RowDefinition Height="10" />
                                 </Grid.RowDefinitions>
 
-                                <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                                    <DataGrid Name="ResultGrid" MinHeight="40" MaxHeight="400" IsReadOnly="True" CanUserSortColumns="False"
-                                              AutoGeneratingColumn="ResultGrid_OnAutoGeneratingColumn" LoadingRow="ResultGrid_OnLoadingRow"
-                                              MouseLeftButtonUp="ResultGrid_OnMouseLeftButtonUp"
-                                              ItemsSource="{Binding DefaultView}" />
-                                </ScrollViewer>
-                                <GridSplitter Grid.Row="1" Height="10" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch"/>
+                                <DataGrid Name="ResultGrid" MinHeight="40" MaxHeight="400" Width="{Binding ElementName=ScrlViewerOuter, Path=ViewportWidth}" IsReadOnly="True" CanUserSortColumns="False"
+                                          AutoGeneratingColumn="ResultGrid_OnAutoGeneratingColumn" LoadingRow="ResultGrid_OnLoadingRow"
+                                          MouseLeftButtonUp="ResultGrid_OnMouseLeftButtonUp"
+                                          ItemsSource="{Binding DefaultView}" />
+                                <GridSplitter Grid.Row="1" Height="10" ResizeDirection="Rows" ResizeBehavior="CurrentAndNext" HorizontalAlignment="Stretch"/>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
