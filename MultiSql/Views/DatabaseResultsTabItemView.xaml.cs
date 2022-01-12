@@ -21,7 +21,7 @@ namespace MultiSql.Views
         /// </summary>
         /// <param name="sender">The sender object.</param>
         /// <param name="e">The DataGridRowEventArgs object.</param>
-        private void ResultGrid_OnLoadingRow(Object? sender, DataGridRowEventArgs e)
+        private void ResultGrid_OnLoadingRow(Object sender, DataGridRowEventArgs e)
         {
             e.Row.Header = (e.Row.GetIndex() + 1).ToString();
         }
@@ -32,7 +32,7 @@ namespace MultiSql.Views
         /// </summary>
         /// <param name="sender">The sender data grid object.</param>
         /// <param name="e">The DataGridAutoGeneratingColumnEventArgs object.</param>
-        private void ResultGrid_OnAutoGeneratingColumn(Object? sender, DataGridAutoGeneratingColumnEventArgs e)
+        private void ResultGrid_OnAutoGeneratingColumn(Object sender, DataGridAutoGeneratingColumnEventArgs e)
         {
             e.Column.SortMemberPath = e.PropertyName;
             var dataGridBoundColumn = e.Column as DataGridBoundColumn;

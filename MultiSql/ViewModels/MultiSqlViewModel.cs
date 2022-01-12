@@ -538,16 +538,6 @@ namespace MultiSql.ViewModels
         private String fileSaveLocation = String.Empty;
 
         /// <summary>
-        ///     Boolean to indicate whether the queries returning no data are to be displayed.
-        /// </summary>
-        private Boolean ignoreEmptyResults;
-
-        /// <summary>
-        ///     Boolean to indicate whether the databases retrieval is in progress.
-        /// </summary>
-        private Boolean isDatabaseRetrievalInProgress;
-
-        /// <summary>
         ///     Boolean to indicate whether the current result is the first result.
         /// </summary>
         private Boolean isFirstResultRetrieved;
@@ -556,11 +546,6 @@ namespace MultiSql.ViewModels
         ///     Private store to determine if the query is running.
         /// </summary>
         private Boolean isQueryRunning;
-
-        /// <summary>
-        ///     Private store to retain the width of the left column.
-        /// </summary>
-        private Double lastLeftColumnWidth;
 
         /// <summary>
         ///     Private variable to hold the command object to load a SQL query from a file.
@@ -1042,20 +1027,6 @@ namespace MultiSql.ViewModels
                          : String.Join(String.Empty, Enumerable.Range(1, dashCount).Select(n => charToPrint));
 
             return retVal;
-        }
-
-        /// <summary>
-        ///     Handling row changed event to check for cancelling of command.
-        /// </summary>
-        /// <param name="sender">The sender object.</param>
-        /// <param name="e">The DataRowChangeEventArgs object.</param>
-        private void ResultRows_RowChanged(Object sender, DataRowChangeEventArgs e)
-        {
-            if (cancellationTokenSource != null && cancellationTokenSource.Token != null && cancellationTokenSource.Token.IsCancellationRequested && isQueryRunning)
-            {
-                IsQueryRunning = false;
-                throw new OperationCanceledException("Execution terminated by user.", cancellationTokenSource.Token);
-            }
         }
 
         /// <summary>

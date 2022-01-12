@@ -41,7 +41,7 @@
         <TreeView Grid.Row="1" ItemsSource="{Binding ServerList}">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:ServerViewModel}"
-                                          ItemsSource="{Binding Databases}">
+                                          ItemsSource="{Binding DatabasesView}">
                     <StackPanel>
                         <StackPanel.ContextMenu>
                             <ContextMenu>
@@ -114,21 +114,17 @@
             </StackPanel>
 
             <!-- TODO: Figure out how to use search for treeview and then re-enable visibility. -->
-            <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Collapsed" Name="TxtBlkDatabasesSearch" Text="Search Databases" />
-            <TextBox Grid.Row="1" Grid.Column="1" Visibility="Collapsed" Name="TxtFilterDatabaseList" 
+            <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Visible" Name="TxtBlkDatabasesSearch" Text="Search Databases" />
+            <TextBox Grid.Row="1" Grid.Column="1" Visibility="Visible" Name="TxtFilterDatabaseList" 
                      PreviewTextInput="TxtFilterDatabaseList_PreviewTextInput" MaxLength="5" 
                      Width="Auto" Text="{Binding DatabaseFilterText, UpdateSourceTrigger=PropertyChanged}"  />
 
-            <Grid Grid.Row="2" Grid.ColumnSpan="2" Height="100" Visibility="{Binding ErrorText.Length, Converter={StaticResource CountToVisibilityConverter}}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Name="TxtErrors" IsReadOnly="True" Foreground="Red" AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Height="Auto"
-                         Text="{Binding ErrorText, Mode=OneWay}"/>
-            </Grid>
+
+            <TextBox Grid.Row="2" Grid.ColumnSpan="2" Height="100" Visibility="{Binding ErrorText.Length, Converter={StaticResource CountToVisibilityConverter}}"
+                     Name="TxtErrors" IsReadOnly="True" Foreground="Red" AcceptsReturn="True"
+                     HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
+                     Text="{Binding ErrorText, Mode=OneWay}"/>
+
         </Grid>
     </Grid>
 </UserControl>

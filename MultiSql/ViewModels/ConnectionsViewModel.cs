@@ -19,11 +19,6 @@ namespace MultiSql.ViewModels
         /// </summary>
         private ObservableCollection<ServerViewModel> _servers;
 
-        /// <summary>
-        ///     Private store to determine if the query is running.
-        /// </summary>
-        private Boolean isQueryRunning;
-
         #endregion Private Fields
 
         #region Public Events
@@ -36,7 +31,7 @@ namespace MultiSql.ViewModels
 
         public RelayCommand CmdAddConnection
         {
-            get { return _cmdAddConnection ??= new RelayCommand(execute => AddSQLConnection(), canExecute => !isQueryRunning); }
+            get { return _cmdAddConnection ??= new RelayCommand(execute => AddSQLConnection(), canExecute => true); }
         }
 
         /// <summary>

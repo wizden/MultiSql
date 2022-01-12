@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Windows.Data;
 using MultiSql.Common;
 
 namespace MultiSql.ViewModels
@@ -49,6 +50,8 @@ namespace MultiSql.ViewModels
                 RaisePropertyChanged();
             }
         }
+
+        public ListCollectionView DatabasesView => (ListCollectionView)CollectionViewSource.GetDefaultView(Databases);
 
         public String Description => $"Name: {ConnectionStringBuilder.DataSource}, Integrated Security: {ConnectionStringBuilder.IntegratedSecurity}" +
                                      (!String.IsNullOrWhiteSpace(ConnectionCredential?.UserId) ? $", User ID: {ConnectionCredential.UserId}" : String.Empty);

@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Data;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using Microsoft.Win32;
 using MultiSql.Common;
@@ -48,11 +47,6 @@ namespace MultiSql.ViewModels
         ///     Private store for the command to load the database list.
         /// </summary>
         private RelayCommand _cmdLoadList;
-
-        /// <summary>
-        ///     Private store for the command to open management studio for the connection.
-        /// </summary>
-        private RelayCommand _cmdOpenMgmtStudio;
 
         /// <summary>
         ///     Private store for the command to save the database list.
@@ -134,14 +128,6 @@ namespace MultiSql.ViewModels
         }
 
         /// <summary>
-        ///     Command to open management studio for the server connection.
-        /// </summary>
-        public RelayCommand CmdOpenMgmtStudio
-        {
-            get { return _cmdOpenMgmtStudio ??= new RelayCommand(execute => OpenManagementStudio(), canExecute => true); }
-        }
-
-        /// <summary>
         ///     Command to save the list of databases for future selection.
         /// </summary>
         public RelayCommand CmdSaveList
@@ -166,7 +152,11 @@ namespace MultiSql.ViewModels
             set
             {
                 _databaseFilterText                                                         = value;
-                ((CollectionView) CollectionViewSource.GetDefaultView(AllDatabases)).Filter = DatabaseFilter;
+
+                foreach (var server in ServerList)
+                {
+                    server.DatabasesView.Filter = DatabaseFilter;
+                }
             }
         }
 
@@ -216,6 +206,9 @@ namespace MultiSql.ViewModels
             set
             {
                 selectAllDatabases = value;
+
+                foreach (var server in ServerList) { }
+
                 AllDatabases.
                     Where(dh => dh.DatabaseName.ToUpper().Contains(DatabaseFilterText.ToUpper()) || dh.Database.ServerName.ToUpper().Contains(DatabaseFilterText.ToUpper())).
                     ToList().
@@ -374,27 +367,37 @@ namespace MultiSql.ViewModels
 
                                                                              try
                                                                              {
-                                                                                 var databasesNotFound = new List<String>();
-                                                                                 var databaseList      = File.ReadAllLines(ofd.FileName).Select(s => s.ToUpper());
+                                                                                 var serverDbListDoc = XDocument.Load(ofd.FileName);
 
-                                                                                 foreach (var databaseName in databaseList)
+                                                                                 foreach (var serverElement in serverDbListDoc.Root.Descendants("Server"))
                                                                                  {
-                                                                                     try
-                                                                                     {
-                                                                                         AllDatabases.First(db => db.DatabaseName.ToUpper() == databaseName).
-                                                                                                      IsChecked = !SelectAllDatabases;
-                                                                                     }
-                                                                                     catch (InvalidOperationException ioe)
-                                                                                     {
-                                                                                         databasesNotFound.Add(databaseName);
-                                                                                     }
-                                                                                 }
+                                                                                     var matchingServer = ServerList.FirstOrDefault(s => s.ServerName.ToUpper() ==
+                                                                                         serverElement.Attribute("Name").Value.ToUpper());
 
-                                                                                 if (databasesNotFound.Count > 0)
-                                                                                 {
-                                                                                     ErrorText = "Unable to match databases from list: " +
-                                                                                                 String.Join(", ", databasesNotFound)    +
-                                                                                                 ".";
+                                                                                     if (matchingServer != null)
+                                                                                     {
+                                                                                         foreach (var dbElement in serverElement.Descendants("Database"))
+                                                                                         {
+                                                                                             var matchingDb = matchingServer.Databases.
+                                                                                                 FirstOrDefault(db => db.DatabaseName.ToUpper() ==
+                                                                                                                      dbElement.Value.ToUpper());
+
+                                                                                             if (matchingDb != null)
+                                                                                             {
+                                                                                                 matchingDb.IsChecked = true;
+                                                                                             }
+                                                                                             else
+                                                                                             {
+                                                                                                 ErrorText +=
+                                                                                                     $"Could not find database {dbElement.Value.ToUpper()} on server {serverElement.Attribute("Name").Value}.{Environment.NewLine}";
+                                                                                             }
+                                                                                         }
+                                                                                     }
+                                                                                     else
+                                                                                     {
+                                                                                         ErrorText +=
+                                                                                             $"Could not find server {serverElement.Attribute("Name").Value}.{Environment.NewLine}";
+                                                                                     }
                                                                                  }
                                                                              }
                                                                              catch (IOException iex)
@@ -407,23 +410,6 @@ namespace MultiSql.ViewModels
 
 
         }
-
-        private void OpenManagementStudio()
-        {
-            ////if (sender is MenuItem && ((MenuItem)sender).Parent is ContextMenu && ((ContextMenu)((MenuItem)sender).Parent).PlacementTarget is ContentControl)
-            ////{
-            ////    if (((ContentControl)((ContextMenu)((MenuItem)sender).Parent).PlacementTarget).Content is DatabaseViewModel)
-            ////    {
-            ////        var databaseInfo = ((ContentControl)((ContextMenu)((MenuItem)sender).Parent).PlacementTarget).Content as DatabaseViewModel;
-            ////        var mgmtStudioExe = @"C:\Program Files (x86)\Microsoft SQL Server Management Studio 18\Common7\IDE\Ssms.exe";
-            ////        var args = String.Format("-S {0} -d {1} -E", databaseInfo.Database.ServerName, databaseInfo.DatabaseName);
-            ////        var ssmsProcess = new Process();
-            ////        ssmsProcess.StartInfo = new ProcessStartInfo(mgmtStudioExe, args);
-            ////        ssmsProcess.Start();
-            ////    }
-            ////}
-        }
-
 
         private async Task SaveList()
         {
@@ -440,11 +426,20 @@ namespace MultiSql.ViewModels
                                                                          {
                                                                              try
                                                                              {
-                                                                                 var dbList = String.Join(Environment.NewLine,
-                                                                                                          AllDatabases.Where(db => db.IsChecked).
-                                                                                                                       Select(db => db.Database));
+                                                                                 var root = new XElement("MultiSql", null);
 
-                                                                                 File.WriteAllText(sfd.FileName, dbList);
+                                                                                 foreach (var server in ServerList)
+                                                                                 {
+                                                                                     if (server.Databases.Any(db => db.IsChecked))
+                                                                                     {
+                                                                                         var serverElement = new XElement("Server", new XAttribute("Name", server.ServerName));
+                                                                                         serverElement.Add(server.Databases.Where(db => db.IsChecked).
+                                                                                                                  Select(db => new XElement("Database", db.DatabaseName)));
+                                                                                         root.Add(serverElement);
+                                                                                     }
+                                                                                 }
+
+                                                                                 new XDocument(root).Save(sfd.FileName);
                                                                              }
                                                                              catch (IOException iex)
                                                                              {

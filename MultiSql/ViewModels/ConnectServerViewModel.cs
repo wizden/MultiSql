@@ -60,7 +60,9 @@ namespace MultiSql.ViewModels
             SelectedAuthenticationType = WindowsAuth;
             Errors                     = String.Empty;
             cancellationTokenSource    = new CancellationTokenSource();
-            LoadConnectionsAsync();
+
+            // Not awaiting here as it's not critical to block user until all previous connections have been retrieved.
+            _ = LoadConnectionsAsync();
         }
 
         #endregion Public Constructors
@@ -74,7 +76,7 @@ namespace MultiSql.ViewModels
 
         public RelayCommand CmdCancel
         {
-            get { return cmdCancel ??= new RelayCommand(async execute => await CancelConnection(), canExecute => true); }
+            get { return cmdCancel ??= new RelayCommand(execute => CancelConnection(), canExecute => true); }
         }
 
         public RelayCommand CmdConnect
@@ -155,7 +157,7 @@ namespace MultiSql.ViewModels
 
         #region Private Methods
 
-        private async Task CancelConnection()
+        private void CancelConnection()
         {
             Logger.Debug("Cancelling the connection window.");
             cancellationTokenSource.Cancel();
@@ -211,7 +213,7 @@ namespace MultiSql.ViewModels
                 ConnectionChanged?.Invoke(this, EventArgs.Empty);
 
                 // Not awaiting here as it's not critical that the save should occur to block the user from connecting.
-                SaveConnectionToListAsync(connString.DataSource, connString.IntegratedSecurity);
+                _ = SaveConnectionToListAsync(connString.DataSource, connString.IntegratedSecurity);
             }
             catch (Exception exception)
             {
@@ -269,11 +271,11 @@ namespace MultiSql.ViewModels
                                                                               DateTime.Parse(conInfo.Attribute("LastUsed").Value)));
                                    }
                                }
-                               catch (XmlException xe)
+                               catch (XmlException)
                                {
                                    Logger.Error($"Unable to parse XML from document in {MultiSqlSettings.ConnectionsListFile}. If the file is corrupt, feel free to delete it and the program will generate a new one for future use.");
                                }
-                               catch (FileNotFoundException ffe)
+                               catch (FileNotFoundException)
                                {
                                    CreateConnectionDocument();
                                }
