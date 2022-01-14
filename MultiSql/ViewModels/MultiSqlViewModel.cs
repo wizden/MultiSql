@@ -45,6 +45,16 @@ namespace MultiSql.ViewModels
             executionTimer.Elapsed += ExecutionTimer_Elapsed;
             DatabaseListExpanded   =  true;
             ResultDisplayType      =  ResultDisplayType.Text;
+
+            try
+            {
+                QueryAllText = File.ReadAllText(editorContentFilePath);
+            }
+            catch (IOException)
+            {
+                Logger.Warn($"Unable to read content from path {editorContentFilePath}");
+            }
+
         }
 
         #endregion
@@ -249,31 +259,26 @@ namespace MultiSql.ViewModels
             {
                 queriesToExecute.Clear();
 
-                queriesToExecute = QueryAllText.Split(new[] {Environment.NewLine + Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries).
-                                                Where(str => str != Environment.NewLine).
-                                                ToList();
-
-                // TODO: Pending task of determining query.
-                ////if (String.IsNullOrEmpty(TxtQuery.SelectedText))
-                ////{
-                ////    if (TxtQuery.Text.Contains("@"))
-                ////    {
-                ////        // The query contains the "@" character. Consider the whole text as a script instead of individual queries.
-                ////        queriesToExecute = new[] {TxtQuery.Text}.ToList();
-                ////    }
-                ////    else
-                ////    {
-                ////        queriesToExecute = TxtQuery.Text.Split(new[] {Environment.NewLine + Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries).
-                ////                                    Where(str => str != Environment.NewLine).
-                ////                                    ToList();
-                ////    }
-                ////}
-                ////else
-                ////{
-                ////    queriesToExecute = TxtQuery.SelectedText.Split(new[] {Environment.NewLine + Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries).
-                ////                                Where(str => str != Environment.NewLine).
-                ////                                ToList();
-                ////}
+                if (String.IsNullOrEmpty(QuerySelectedText))
+                {
+                    if (QueryAllText.Contains("@"))
+                    {
+                        // The query contains the "@" character. Consider the whole text as a script instead of individual queries.
+                        queriesToExecute = new[] { QueryAllText }.ToList();
+                    }
+                    else
+                    {
+                        queriesToExecute = QueryAllText.Split(new[] { Environment.NewLine + Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).
+                                                        Where(str => str != Environment.NewLine).
+                                                        ToList();
+                    }
+                }
+                else
+                {
+                    queriesToExecute = QuerySelectedText.Split(new[] { Environment.NewLine + Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).
+                                                         Where(str => str != Environment.NewLine).
+                                                         ToList();
+                }
 
                 return queriesToExecute;
             }
@@ -288,6 +293,8 @@ namespace MultiSql.ViewModels
                 RaisePropertyChanged();
             }
         }
+
+        public String QuerySelectedText { get; set; }
 
         /// <summary>
         ///     Gets the time taken to execute the query.

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using NLog;
 
 namespace MultiSql.Common
 {
@@ -29,7 +30,52 @@ namespace MultiSql.Common
         /// </summary>
         private static readonly String connectionsListFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Connections.xml");
 
+        /// <summary>
+        ///     Private store for the Logger object.
+        /// </summary>
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        /// <summary>
+        ///     Private store for the location of the file that stores where the SSMS executable resides.
+        /// </summary>
+        private static readonly String ssmsFilePathInfo = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SsmsPath.txt");
+
+        /// <summary>
+        ///     Private store of the location of the SSMS executable.
+        /// </summary>
+        private static readonly String ssmsExecutablePath;
+
         #endregion Private Fields
+
+        static MultiSqlSettings()
+        {
+            try
+            {
+                /*
+                 * Every version of SSMS seems to be in a different path, so no one size fits all solution:
+                 * https://aprentis.net/sql-server-management-studio-ssms-exe-executable-file-location/
+                 */
+
+                ssmsExecutablePath = File.ReadAllText(ssmsFilePathInfo);
+                Logger.Debug($"SSMS executable path set to '{ssmsExecutablePath}'.");
+            }
+            catch (Exception)
+            {
+                // Set default path if any file exception is thrown.
+                ssmsExecutablePath = @"C:\Program Files (x86)\Microsoft SQL Server Management Studio 18\Common7\IDE\ssms.exe";
+                Logger.Debug($"Setting default path of the SSMS executable to '{ssmsExecutablePath}' in '{ssmsFilePathInfo}'. " +
+                             $"If the path to the executable is not correct, please set the correct value in '{ssmsFilePathInfo}'.");
+
+                try
+                {
+                    File.WriteAllText(ssmsFilePathInfo, ssmsExecutablePath);
+                }
+                catch (Exception fileWriteException)
+                {
+                    Logger.Error(fileWriteException, $"Unable to write SSMS executable path location '{ssmsExecutablePath}' to '{ssmsFilePathInfo}'.");
+                }
+            }
+        }
 
         #region Public Enums
 
@@ -148,6 +194,24 @@ namespace MultiSql.Common
             }
 
             return connStringBuilder.ConnectionString;
+        }
+
+        /// <summary>
+        ///     Connect to Sql Server Management Studio.
+        /// </summary>
+        /// <param name="serverName">The server name.</param>
+        /// <param name="databaseName">The parameter is not used.</param>
+        public static void ConnectToSsms(String serverName, String databaseName)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(ssmsExecutablePath, $"-S {serverName}"));
+            }
+            catch (Exception e)
+            {
+                e.Data.Add("Ssms Executable Path", ssmsExecutablePath);
+                Logger.Error(e, $"Unable to open ssms.exe. Please locate ssms.exe on the machine and save the full path to '{ssmsFilePathInfo}'.");
+            }
         }
 
         #endregion Public Methods

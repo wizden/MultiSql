@@ -113,7 +113,6 @@
                         Command="{Binding CmdSaveList}" />
             </StackPanel>
 
-            <!-- TODO: Figure out how to use search for treeview and then re-enable visibility. -->
             <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Visible" Name="TxtBlkDatabasesSearch" Text="Search Databases" />
             <TextBox Grid.Row="1" Grid.Column="1" Visibility="Visible" Name="TxtFilterDatabaseList" 
                      PreviewTextInput="TxtFilterDatabaseList_PreviewTextInput" MaxLength="5" 

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Windows.Data;
 using MultiSql.Common;
+using NLog;
 
 namespace MultiSql.ViewModels
 {
@@ -11,6 +11,11 @@ namespace MultiSql.ViewModels
     {
 
         #region Private Fields
+
+        /// <summary>
+        ///     Private store for the Logger object.
+        /// </summary>
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private ObservableCollection<DatabaseViewModel> _databases;
         private Boolean                                 _isChecked;
@@ -23,6 +28,8 @@ namespace MultiSql.ViewModels
 
         #region Public Constructors
 
+        static ServerViewModel() { }
+
         public ServerViewModel(SqlConnectionStringBuilder connectionStringBuilder, SqlCredential connectionCredential)
         {
             ConnectionStringBuilder = connectionStringBuilder;
@@ -31,6 +38,8 @@ namespace MultiSql.ViewModels
             UserName                = ConnectionStringBuilder.UserID;
             IntegratedSecurity      = ConnectionStringBuilder.IntegratedSecurity;
             ConnectionCredential    = connectionCredential;
+
+
         }
 
         #endregion Public Constructors
@@ -100,9 +109,8 @@ namespace MultiSql.ViewModels
 
         private void ConnectToSsms()
         {
-            // TODO: Determine a better way to set the path based on versions of SSMS.
-            var ssmsPath = @"C:\Program Files (x86)\Microsoft SQL Server Management Studio 18\Common7\IDE\ssms.exe";
-            Process.Start(new ProcessStartInfo(ssmsPath, $"-S {ServerName}"));
+            MultiSqlSettings.ConnectToSsms(ServerName, String.Empty);
+
         }
 
         #endregion Public Properties

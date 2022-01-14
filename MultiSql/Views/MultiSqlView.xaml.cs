@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Windows;
 using System.Windows.Controls;
+using MultiSql.ViewModels;
 
 namespace MultiSql.Views
 {
@@ -24,6 +26,15 @@ namespace MultiSql.Views
         private void TxtBlkResults_OnTextChanged(Object sender, TextChangedEventArgs e)
         {
             TxtBlkResults.ScrollToEnd();
+        }
+
+        private void TxtQuery_OnSelectionChanged(Object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MultiSqlViewModel)
+            {
+                var dc = DataContext as MultiSqlViewModel;
+                dc.QuerySelectedText = String.IsNullOrWhiteSpace(TxtQuery.SelectedText) ? String.Empty : TxtQuery.SelectedText;
+            }
         }
 
     }
