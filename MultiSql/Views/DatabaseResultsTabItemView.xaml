@@ -16,15 +16,15 @@
                         <DataTemplate>
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" MinHeight="40" MaxHeight="1000" />
                                     <RowDefinition Height="10" />
                                 </Grid.RowDefinitions>
 
-                                <DataGrid Name="ResultGrid" MinHeight="40" MaxHeight="400" Width="{Binding ElementName=ScrlViewerOuter, Path=ViewportWidth}" IsReadOnly="True" CanUserSortColumns="False"
+                                <DataGrid Name="ResultGrid" Width="{Binding ElementName=ScrlViewerOuter, Path=ViewportWidth}" IsReadOnly="True" CanUserSortColumns="False"
                                           AutoGeneratingColumn="ResultGrid_OnAutoGeneratingColumn" LoadingRow="ResultGrid_OnLoadingRow"
                                           MouseLeftButtonUp="ResultGrid_OnMouseLeftButtonUp"
                                           ItemsSource="{Binding DefaultView}" />
-                                <GridSplitter Grid.Row="1" Height="10" ResizeDirection="Rows" ResizeBehavior="CurrentAndNext" HorizontalAlignment="Stretch"/>
+                                <GridSplitter Grid.Row="1" Height="10" ResizeBehavior="PreviousAndCurrent" HorizontalAlignment="Stretch" />
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

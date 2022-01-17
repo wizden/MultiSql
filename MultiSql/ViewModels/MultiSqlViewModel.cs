@@ -1306,7 +1306,7 @@ namespace MultiSql.ViewModels
 
                     if (dbInfo != null)
                     {
-                        fileContent.AppendLine(dbInfo.Database + Environment.NewLine + PrintDashes(defaultDashesToShow));
+                        fileContent.AppendLine($"{dbInfo.Database.ServerName} - {dbInfo.DatabaseName}{Environment.NewLine}{PrintDashes(defaultDashesToShow)}");
                     }
 
                     foreach (var result in results)
@@ -1352,24 +1352,32 @@ namespace MultiSql.ViewModels
                                                                       ? previousFileSaveLocation
                                                                       : Directory.GetParent(previousFileSaveLocation).FullName;
                                            }
-
-                                           if (fbd.ShowDialog() == DialogResult.OK)
-                                           {
-                                               fileSaveLocation         = fbd.SelectedPath;
-                                               previousFileSaveLocation = fileSaveLocation;
-                                           }
                                            else
                                            {
-                                               filePerDatabaseSaveCancelled =
-                                                   true; // Prevent opening the dialog multiple times if the first save has been cancelled.
+                                               previousFileSaveLocation = Directory.GetParent(System.Reflection.Assembly.GetExecutingAssembly().Location).Parent.FullName;
                                            }
+
+                                           System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                                           {
+                                               if (fbd.ShowDialog() == DialogResult.OK)
+                                               {
+                                                   fileSaveLocation = fbd.SelectedPath;
+                                                   previousFileSaveLocation = fileSaveLocation;
+                                               }
+                                               else
+                                               {
+                                                   filePerDatabaseSaveCancelled =
+                                                       true; // Prevent opening the dialog multiple times if the first save has been cancelled.
+                                               }
+                                           });
                                        }
                                    }
                                });
 
                 if (!String.IsNullOrWhiteSpace(fileSaveLocation))
                 {
-                    var fileContent = new StringBuilder();
+                    // Initialise with server name as this cannot be part of the file name since it can include characters like '/'
+                    var fileContent = new StringBuilder(dbInfo.Database.ServerName + Environment.NewLine);
 
                     foreach (var result in results)
                     {
